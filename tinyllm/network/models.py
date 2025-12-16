@@ -6,7 +6,7 @@ from .layers import RMSNorm, MultiheadSelfAttention, FeedForward, Embedding, Lin
 from ..tokenize.tokenizer import Tokenizer
 from jaxtyping import Float, Int
 from loguru import logger
-from typing import Literal
+from typing import Literal, overload
 
 
 class TransformerBlock(Module):
@@ -106,14 +106,33 @@ class TransformerModel(Module):
             f"({embedding_param / 1024 / 1024:,.2f}M embedding, {transformer_param / 1024 / 1024:,.2f}M transformer)."
         )
 
-    def forward(self, x: Int[torch.Tensor, " ... seq_len"]) -> Float[torch.Tensor, " ... seq_len vocab_size"]:
+    @overload
+    def forward(
+        self,
+        x: Int[torch.Tensor, " ... seq_len"],
+        lm_head: Literal[True],
+    ) -> Float[torch.Tensor, " ... seq_len vocab_size"]: ...
+
+    @overload
+    def forward(
+        self,
+        x: Int[torch.Tensor, " ... seq_len"],
+        lm_head: Literal[False],
+    ) -> Float[torch.Tensor, " ... seq_len d_model"]: ...
+
+    def forward(
+        self,
+        x: Int[torch.Tensor, " ... seq_len"],
+        lm_head: bool = True,
+    ):
         assert x.dtype in (torch.int16, torch.int32, torch.int64, torch.uint8, torch.bool, torch.long)
         x = x.to(torch.long)
         x = self.token_embeddings(x)
         for layer in self.layers:
             x = layer(x)
         x = self.ln_final(x)
-        x = self.lm_head(x)
+        if lm_head:
+            x = self.lm_head(x)
         return x
 
     def embed(self, input: Int[torch.Tensor, " seq_len"]) -> Float[torch.Tensor, " seq_len d_model"]:

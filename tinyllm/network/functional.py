@@ -4,6 +4,10 @@ from jaxtyping import Float, Bool, Int
 import einops
 
 
+def relu(x: Tensor) -> Tensor:
+    return x.clamp(min=0)
+
+
 def silu(x: Tensor) -> Tensor:
     return x * torch.sigmoid(x)
 
@@ -71,4 +75,3 @@ def nucleus_sampling(probs, top_p):
     # sample from the candidate tokens
     sampled = torch.multinomial(candidate_probs, 1)
     return candidate_indices[sampled]
-

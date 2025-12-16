@@ -36,9 +36,30 @@ class ModuleList(torch.nn.ModuleList, Module):
         super().__init__(*args, **kwargs)
 
 
+class Sequential(Module):
+    def __init__(self, *layers: Module):
+        super().__init__()
+        self.layers = ModuleList(layers)
+
+    def forward(self, x: Tensor):
+        for layer in self.layers:
+            x = layer(x)
+        return x
+
+
 class Identical(Module):
     def forward(self, x):
         return x
+
+
+class ReLU(Module):
+    def forward(self, x: Tensor) -> Tensor:
+        return functional.relu(x)
+
+
+class SiLU(Module):
+    def forward(self, x: Tensor) -> Tensor:
+        return functional.silu(x)
 
 
 class Linear(Module):
