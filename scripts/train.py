@@ -8,11 +8,13 @@ from app.utils import PROJECT_ROOT
 from app.classifier import TransformerClassifier
 from tinyllm.tokenize.tokenizer import Tokenizer
 from tinyllm.network.models import specifications as model_specs
+from tinyllm.network.multiplatform import ACCL_DEVICE
 
 # %%
 parser = argparse.ArgumentParser()
 parser.add_argument("--epoch", type=int, default=10)
 parser.add_argument("--lr", type=float, default=1e-4)
+parser.add_argument("--device", type=str, default=ACCL_DEVICE)
 args = parser.parse_args()
 
 # %%
@@ -30,19 +32,21 @@ test_path = data_path / "test.tsv"
 # %%
 batch_size = 32
 data = pd.read_csv(train_path, sep="\t")
-dataset = dataloader.Dataset(data, transform=dataloader.transform.to_tensor(tokenizer))
+dataset = dataloader.Dataset(
+    data, transform=dataloader.transform.to_tensor(tokenizer, device=args.device)
+)
 train, valid = dataset.split(test_size=0.2, random_state=42)
 train_dataloader = torch.utils.data.DataLoader(
     train,
     batch_size=batch_size,
     shuffle=True,
-    collate_fn=dataloader.transform.collate_padding,
+    collate_fn=dataloader.transform.collate_padding(device=args.device),
 )
 valid_dataloader = torch.utils.data.DataLoader(
     valid,
     batch_size=batch_size,
     shuffle=False,
-    collate_fn=dataloader.transform.collate_padding,
+    collate_fn=dataloader.transform.collate_padding(device=args.device),
 )
 
 # %%
@@ -55,6 +59,7 @@ model = TransformerClassifier(
     num_classes=num_classes,
     **spec,
 )
+model = model.to(args.device)
 
 # %%
 try:
@@ -85,8 +90,12 @@ try:
             print(f"Validation Accuracy: {correct / len(valid):.4f}")
             print(f"Distribution of predictions: {counter}")
 
+        ema_loss = 0.0
         with tqdm(total=len(train_dataloader), desc=f"Epoch {epoch+1}") as pbar:
             for idx, batch in enumerate(train_dataloader):
+                if idx % 1000 == 0:
+                    validate()
+                    model.train()
                 input_ids = batch["input_ids"]
                 lengths = batch["lengths"]
                 labels = batch["labels"]
@@ -95,16 +104,16 @@ try:
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
-                pbar.set_postfix({"loss": loss.item()})
+                ema_loss = (
+                    0.98 * ema_loss + 0.02 * loss.item()
+                    if ema_loss != 0.0
+                    else loss.item()
+                )
+                pbar.set_postfix({"loss": ema_loss})
                 pbar.update(1)
-                if idx % 500 == 0:
-                    validate()
-                    model.train()
-            validate()
-            model.train()
 except Exception:
     import traceback
     import pdb
+
     traceback.print_exc()
     pdb.post_mortem()
-    
