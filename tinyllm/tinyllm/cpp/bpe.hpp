@@ -6,10 +6,10 @@
 #define PYBIND11_DETAILED_ERROR_MESSAGES
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <format>
 
 namespace py = pybind11;
 
@@ -184,10 +184,12 @@ train(py::dict vocab_py, py::dict word_counts_py, py::dict pair_counts_py, int v
         Bytes new_vocab = merge_pair.first + merge_pair.second;
         vocab[vocab.size()] = new_vocab;
 
-        bar.set_option(
-            option::PostfixText{std::format(
-                "{}/{} <{}|{}> count: {}", vocab.size(), vocab_size, merge_pair.first,
-                merge_pair.second, best_count)});
+        {
+            std::ostringstream oss;
+            oss << vocab.size() << "/" << vocab_size << " <" << merge_pair.first << "|"
+                << merge_pair.second << "> count: " << best_count;
+            bar.set_option(option::PostfixText{oss.str()});
+        }
         bar.set_progress(
             (float)(vocab.size() - original_vocab_size) * 100 / (vocab_size - original_vocab_size));
 
