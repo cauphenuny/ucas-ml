@@ -239,6 +239,18 @@ class Tokenizer:
                 f"{name}-merges.json",
                 special_tokens=special_tokens,
             )
+    
+    @classmethod
+    def from_dir(
+        cls,
+        dir_path: str | os.PathLike,
+        special_tokens: list[str] | None = ["<|endoftext|>"],
+    ):
+        return cls.from_files(
+            os.path.join(dir_path, "vocab.json"),
+            os.path.join(dir_path, "merges.json"),
+            special_tokens=special_tokens,
+    )
 
     def to_files(self, vocab_filepath: str | os.PathLike, merges_filepath: str | os.PathLike) -> None:
         encoded_vocab = {k: base64.b64encode(v).decode("ascii") for k, v in self.vocab.items()}
