@@ -3,6 +3,7 @@ import pandas as pd
 import torch
 import argparse
 from tqdm import tqdm
+from loguru import logger
 from sklearn.metrics import classification_report, confusion_matrix
 
 # %%
@@ -29,7 +30,27 @@ parser.add_argument(
 parser.add_argument(
     "--submit_file", type=str, default=None, help="Filename for submission"
 )
+parser.add_argument(
+    "--reduction",
+    type=str,
+    default="last",
+    help="Reduction method: mean, first, last",
+    choices=["mean", "first", "last"],
+)
+parser.add_argument(
+    "--no-causal",
+    action="store_true",
+    help="Do not use causal masking in the transformer",
+)
 args = parser.parse_args()
+
+# %%
+if args.reduction in ("first", "mean"):
+    if not args.no_causal:
+        args.no_causal = True
+        logger.warning(
+            "Causal masking is only compatible with 'last' reduction, auto set --no-causal to disable causal masking"
+        )
 
 # %%
 output_dir = PROJECT_ROOT / args.output_dir
@@ -73,14 +94,16 @@ num_classes = 5
 model = TransformerClassifier(
     vocab_size=vocab_size,
     context_length=256,
-    reduction="first",
     num_classes=num_classes,
+    causal=not args.no_causal,
+    reduction=args.reduction,
     **spec,
 )
 print("Model architecture:")
 print(model)
 model = model.to(args.device)
 criterion = torch.nn.CrossEntropyLoss()
+
 
 # %%
 def validate():

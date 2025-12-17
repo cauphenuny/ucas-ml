@@ -6,6 +6,7 @@ from typing import Literal
 
 
 class TransformerClassifier(torch.nn.Module):
+
     def __init__(
         self,
         num_classes: int,
@@ -14,7 +15,8 @@ class TransformerClassifier(torch.nn.Module):
         d_model: int,
         num_heads: int,
         num_layers: int,
-        reduction: Literal["mean", "first"] = "mean",
+        reduction: Literal["mean", "first", "last"] = "last",
+        causal: bool = False,
         **model_args,
     ):
         super().__init__()
@@ -24,7 +26,7 @@ class TransformerClassifier(torch.nn.Module):
             d_model=d_model,
             num_heads=num_heads,
             num_layers=num_layers,
-            causal=False,
+            causal=causal,
             **model_args,
         )
         self.mlp = layers.Sequential(
@@ -32,10 +34,38 @@ class TransformerClassifier(torch.nn.Module):
             layers.SiLU(),
             layers.Linear(d_model * 4, num_classes),
         )
-        if reduction == "mean":
-            self.reduction = lambda x: x.mean(dim=-2)
-        elif reduction == "first":
-            self.reduction = lambda x: x[:, 0, :]
+        if reduction == "first":
+            self.reduction = lambda x, l: x[:, 0, :]
+        elif reduction == "mean":
+
+            def reduction_fn(
+                x: Int[torch.Tensor, "batch seq_len d_model"],
+                seq_len: Int[torch.Tensor, "batch"] | None,
+            ):
+                if seq_len is None:
+                    return x.mean(dim=-2)
+                else:
+                    mask = torch.arange(x.size(1), device=x.device).unsqueeze(0) < seq_len.unsqueeze(1)
+                    x = x * mask.unsqueeze(-1)
+                    return x.sum(dim=-2) / seq_len.unsqueeze(-1)
+
+            self.reduction = reduction_fn
+
+        elif reduction == "last":
+
+            def reduction_fn(
+                x: Int[torch.Tensor, "batch seq_len d_model"],
+                seq_len: Int[torch.Tensor, "batch"] | None,
+            ):
+                if seq_len is None:
+                    return x[:, -1, :]
+                batch_size = x.size(0)
+                idx = (
+                    (seq_len - 1).unsqueeze(1).unsqueeze(2).expand(batch_size, 1, x.size(2))
+                )
+                return x.gather(1, idx).squeeze(1)
+
+            self.reduction = reduction_fn
 
     def forward(
         self,
@@ -43,7 +73,7 @@ class TransformerClassifier(torch.nn.Module):
         len: Int[torch.Tensor, "..."] | None = None,
     ) -> Float[torch.Tensor, "... num_classes"]:
         x = self.model(x, len=len, lm_head=False)
-        x = self.reduction(x)
+        x = self.reduction(x, len)
         x = self.mlp(x)
         return x
 
