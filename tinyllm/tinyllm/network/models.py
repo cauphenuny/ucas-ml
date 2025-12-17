@@ -22,6 +22,7 @@ class TransformerBlock(Module):
         norm_type: Literal["rms", "none"] = "rms",
         norm_location: Literal["pre", "post"] = "pre",
         ffn_activate: Literal["swiglu", "silu"] = "swiglu",
+        causal: bool = True,
     ):
         super().__init__()
         self.ln1 = RMSNorm(d_model, device=device, dtype=dtype) if norm_type == "rms" else Identical()
@@ -32,6 +33,7 @@ class TransformerBlock(Module):
             rope_len=rope_len,
             device=device,
             dtype=dtype,
+            causal=causal,
         )
         self.ln2 = RMSNorm(d_model, device=device, dtype=dtype) if norm_type == "rms" else Identical()
         self.ffn = FeedForward(d_model, d_ff, activate=ffn_activate, device=device, dtype=dtype)
@@ -69,6 +71,7 @@ class TransformerModel(Module):
         norm_type: Literal["rms", "none"] = "rms",
         norm_location: Literal["pre", "post"] = "pre",
         ffn_activate: Literal["swiglu", "silu"] = "swiglu",
+        causal: bool = True,
     ):
         super().__init__()
 
@@ -87,6 +90,7 @@ class TransformerModel(Module):
                     norm_type=norm_type,
                     norm_location=norm_location,
                     ffn_activate=ffn_activate,
+                    causal=causal,
                 )
                 for _ in range(num_layers)
             ]
@@ -136,7 +140,7 @@ class TransformerModel(Module):
         x = x.to(torch.long)
         x = self.token_embeddings(x)
         for layer in self.layers:
-            x = layer(x)
+            x = layer(x, len)
         x = self.ln_final(x)
         if lm_head:
             x = self.lm_head(x)

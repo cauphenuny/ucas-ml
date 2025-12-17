@@ -5,7 +5,7 @@ from tinyllm.network.layers import MultiheadSelfAttention
 def test_padding_ignores_padded_positions():
     # create a simple MHA with identity projections so q=k=v=x and output_proj is identity
     d_model = 2
-    mha = MultiheadSelfAttention(d_model=d_model, num_heads=1, casual=False)
+    mha = MultiheadSelfAttention(d_model=d_model, num_heads=1, causal=False)
     for name in ("q_proj", "k_proj", "v_proj", "output_proj"):
         proj = getattr(mha, name)
         proj.weight.data = torch.eye(d_model)

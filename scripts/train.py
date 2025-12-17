@@ -47,11 +47,12 @@ valid_dataloader = torch.utils.data.DataLoader(
 
 # %%
 spec = model_specs("tiny")
+num_classes = 5
 model = TransformerClassifier(
     vocab_size=vocab_size,
     context_length=256,
     reduction="first",
-    num_classes=5,
+    num_classes=num_classes,
     **spec,
 )
 
@@ -65,6 +66,7 @@ for epoch in range(args.epoch):
     def validate():
         valid_loss = 0.0
         correct = 0
+        counter = [0] * num_classes
         model.eval()
         for batch in tqdm(valid_dataloader, desc="Validating", leave=False):
             input_ids = batch["input_ids"]
@@ -73,10 +75,14 @@ for epoch in range(args.epoch):
             logits = model(input_ids, lengths)
             loss = criterion(logits, labels)
             valid_loss += loss.item()
-            correct += (logits.argmax(dim=-1) == labels).sum().item()
+            predict = logits.argmax(dim=-1)
+            correct += (predict == labels).sum().item()
+            for i in range(num_classes):
+                counter[i] += (predict == i).sum().item()
         valid_loss /= len(valid_dataloader)
         print(f"Validation Loss: {valid_loss:.4f}")
         print(f"Validation Accuracy: {correct / len(valid):.4f}")
+        print(f"Distribution of predictions: {counter}")
 
     with tqdm(total=len(train_dataloader), desc=f"Epoch {epoch+1}") as pbar:
         for idx, batch in enumerate(train_dataloader):

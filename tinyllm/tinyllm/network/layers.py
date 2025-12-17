@@ -284,7 +284,7 @@ class MultiheadSelfAttention(Module):
         self,
         d_model: int,
         num_heads: int,
-        casual: bool = True,
+        causal: bool = True,
         rope_theta: float | None = None,
         rope_len: int | None = None,
         device: torch.device | str | None = None,
@@ -293,7 +293,7 @@ class MultiheadSelfAttention(Module):
         super().__init__()
         self.num_heads = num_heads
         self.head_dim = d_model // num_heads
-        self.casual = casual
+        self.causal = causal
         self.q_proj = Linear(d_model, d_model, device=device, dtype=dtype)
         self.k_proj = Linear(d_model, d_model, device=device, dtype=dtype)
         self.v_proj = Linear(d_model, d_model, device=device, dtype=dtype)
@@ -332,7 +332,7 @@ class MultiheadSelfAttention(Module):
         else:
             padding_mask = None
 
-        if self.casual:
+        if self.causal:
             mask = torch.arange(max_seq_len, device=self.device).reshape(-1, 1) >= torch.arange(
                 max_seq_len, device=self.device
             )

@@ -24,6 +24,7 @@ class TransformerClassifier(torch.nn.Module):
             d_model=d_model,
             num_heads=num_heads,
             num_layers=num_layers,
+            causal=False,
             **model_args,
         )
         self.mlp = layers.Sequential(
