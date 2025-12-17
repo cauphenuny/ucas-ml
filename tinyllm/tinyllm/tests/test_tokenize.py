@@ -11,7 +11,7 @@ def tokenize(
 ):
     specials = ["<|endoftext|>"]
     tokenizer = Tokenizer.from_files(
-        f"{tokenizer_path}-vocab.json", f"{tokenizer_path}-merges.json", specials
+        f"{tokenizer_path}/vocab.json", f"{tokenizer_path}/merges.json", specials
     )
     logger.info("reading")
     num_chunks = num_chunks or min(os.cpu_count() or 1, 16)
