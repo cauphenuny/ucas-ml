@@ -48,23 +48,6 @@ endif()
 #     message(WARNING "OpenMP not found, parallel processing will be disabled")
 # endif()
 
-# 添加 fmt 库
-include(FetchContent)
-FetchContent_Declare(
-    fmt
-    GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-    GIT_TAG 9.1.0
-)
-
-# 设置 fmt 选项
-set(FMT_INSTALL OFF CACHE BOOL "" FORCE)
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-
-FetchContent_MakeAvailable(fmt)
-
-# 确保 fmt 库使用 -fPIC 编译
-set_target_properties(fmt PROPERTIES POSITION_INDEPENDENT_CODE ON)
-
 set(PYBIND11_FINDPYTHON ON)
 find_package(pybind11 REQUIRED)
 
@@ -75,8 +58,6 @@ pybind11_add_module(cpp_extensions tinyllm/cpp/export.cpp)
 # if(OpenMP_CXX_FOUND)
 #     target_link_libraries(cpp_extensions PRIVATE OpenMP::OpenMP_CXX)
 # endif()
-
-target_link_libraries(cpp_extensions PRIVATE fmt::fmt)
 
 # 设置输出目录到 Python 包中
 set_target_properties(cpp_extensions PROPERTIES
