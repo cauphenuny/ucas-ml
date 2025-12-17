@@ -51,9 +51,12 @@ class TransformerClassifier(torch.nn.Module):
         tokenized = [tokenizer.encode(phrase) for phrase in phrases]
         length = [len(t) for t in tokenized]
         max_len = max(length)
-        input_ids = torch.zeros((len(phrases), max_len), dtype=torch.int64)
+        device = next(self.parameters()).device
+        input_ids = torch.zeros(
+            (len(phrases), max_len), dtype=torch.int64, device=device
+        )
         for i, t in enumerate(tokenized):
-            input_ids[i, : len(t)] = torch.tensor(t, dtype=torch.int64)
-        logits = self.forward(input_ids, len=torch.tensor(length))
+            input_ids[i, : len(t)] = torch.tensor(t, dtype=torch.int64, device=device)
+        logits = self.forward(input_ids, len=torch.tensor(length, device=device))
         predictions = torch.argmax(logits, dim=-1)
         return predictions.tolist()
