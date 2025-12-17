@@ -16,6 +16,7 @@ from tinyllm.network.multiplatform import ACCL_DEVICE
 # %%
 parser = argparse.ArgumentParser()
 parser.add_argument("--epoch", type=int, default=1)
+parser.add_argument("--batch_size", type=int, default=32)
 parser.add_argument("--lr", type=float, default=1e-4)
 parser.add_argument("--device", type=str, default=ACCL_DEVICE)
 parser.add_argument("--output_dir", type=str, default="output")
@@ -47,7 +48,6 @@ train_path = data_path / "train.tsv"
 test_path = data_path / "test.tsv"
 
 # %%
-batch_size = 32
 dataset = dataloader.Dataset(
     pd.read_csv(train_path, sep="\t"),
     transform=dataloader.transform.to_tensor(tokenizer, device=args.device),
@@ -55,13 +55,13 @@ dataset = dataloader.Dataset(
 train, valid = dataset.split(test_size=0.2, random_state=42)
 train_dataloader = torch.utils.data.DataLoader(
     train,
-    batch_size=batch_size,
+    batch_size=args.batch_size,
     shuffle=True,
     collate_fn=dataloader.transform.collate_padding(device=args.device),
 )
 valid_dataloader = torch.utils.data.DataLoader(
     valid,
-    batch_size=batch_size,
+    batch_size=args.batch_size,
     shuffle=False,
     collate_fn=dataloader.transform.collate_padding(device=args.device),
 )
@@ -77,6 +77,8 @@ model = TransformerClassifier(
     num_classes=num_classes,
     **spec,
 )
+print("Model architecture:")
+print(model)
 model = model.to(args.device)
 criterion = torch.nn.CrossEntropyLoss()
 

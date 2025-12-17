@@ -203,7 +203,7 @@ def specifications(size: str):
         "tiny": dict(d_model=256, num_heads=8, num_layers=4),
         "small": dict(d_model=512, num_heads=16, num_layers=4),
         "medium": dict(d_model=512, num_heads=16, num_layers=8),
-        "large": dict(d_model=768, num_heads=16, num_layers=8),
+        "large": dict(d_model=768, num_heads=16, num_layers=12),
         "x-large": dict(d_model=1024, num_heads=16, num_layers=16),
         "xx-large": dict(d_model=1536, num_heads=16, num_layers=24),
         "3x-large": dict(d_model=2048, num_heads=16, num_layers=32),
