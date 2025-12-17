@@ -11,3 +11,9 @@ uv sync
 ```shell
 uv run pytest
 ```
+
+## Train model
+
+```shell
+uv run scripts/train.py
+```

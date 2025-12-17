@@ -14,30 +14,14 @@ def duration(func):
     return (end - start, ret)
 
 
-def run_tokenizer_simple():
-    specials = ["<|endoftext|>"]
-    tokenizer_10k = Tokenizer.from_files(
-        "data/TinyStoriesV2-GPT4-train-tokenizer-10000-vocab.json",
-        "data/TinyStoriesV2-GPT4-train-tokenizer-10000-merges.json",
-        specials,
-    )
-    test_string = "Hello, World!"
-    encoded_ids = tokenizer_10k.encode(test_string)
-    print(f"{tokenizer_10k.partial_decode(encoded_ids)}")
-    decoded_string = tokenizer_10k.decode(encoded_ids)
-    assert test_string == decoded_string
-
-
 def run_test_tokenizer(test_filepath: str, tokenizer1_path: str, tokenizer2_path: str):
     specials = ["<|endoftext|>"]
-    tokenizer_1 = Tokenizer.from_files(
-        f"{tokenizer1_path}-vocab.json",
-        f"{tokenizer1_path}-merges.json",
+    tokenizer_1 = Tokenizer.from_dir(
+        tokenizer1_path,
         specials,
     )
-    tokenizer_2 = Tokenizer.from_files(
-        f"{tokenizer2_path}-vocab.json",
-        f"{tokenizer2_path}-merges.json",
+    tokenizer_2 = Tokenizer.from_dir(
+        tokenizer2_path,
         specials,
     )
     with open(test_filepath) as f:
@@ -58,9 +42,8 @@ def run_test_tokenizer(test_filepath: str, tokenizer1_path: str, tokenizer2_path
 
 def devide(tokenizer_path):
     specials = ["<|endoftext|>"]
-    tokenizer = Tokenizer.from_files(
-        f"{tokenizer_path}-vocab.json",
-        f"{tokenizer_path}-merges.json",
+    tokenizer = Tokenizer.from_dir(
+        tokenizer_path,
         specials,
     )
     while True:
@@ -75,9 +58,8 @@ def devide(tokenizer_path):
 
 def interactive(tokenizer_path):
     specials = ["<|endoftext|>"]
-    tokenizer = Tokenizer.from_files(
-        f"{tokenizer_path}-vocab.json",
-        f"{tokenizer_path}-merges.json",
+    tokenizer = Tokenizer.from_dir(
+        tokenizer_path,
         specials,
     )
     while True:
@@ -86,8 +68,6 @@ def interactive(tokenizer_path):
 
 
 if __name__ == "__main__":
-    run_tokenizer_simple()
-    # test_tokenizer()
     parser = argparse.ArgumentParser()
     parser.add_argument("--file", type=str, default="data/TinyStoriesV2-GPT4-train.txt")
     parser.add_argument(

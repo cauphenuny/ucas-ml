@@ -29,7 +29,7 @@ parser.add_argument("--num_workers", type=int, default=8)
 
 parser.add_argument("--dataset", type=str, required=True)
 parser.add_argument("--output", type=str, default="outputs")
-parser.add_argument("--project", type=str, default="CS336 - Assignment 1")
+parser.add_argument("--project", type=str, default="ML Project")
 parser.add_argument("--name", type=str, default="experiment")
 parser.add_argument("--resume", type=str, default=None)
 parser.add_argument("--log_interval", type=int, default=10)

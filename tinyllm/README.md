@@ -4,6 +4,8 @@
 
 ```bash
 cd scripts
+# train tokenizer
+uv run bpe.py --help
 # tokenize training data
 uv run tokenize.py --help
 # train

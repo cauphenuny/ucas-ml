@@ -8,20 +8,23 @@ from typing import Literal
 class TransformerClassifier(torch.nn.Module):
     def __init__(
         self,
+        num_classes: int,
         vocab_size: int,
         context_length: int,
         d_model: int,
         num_heads: int,
         num_layers: int,
-        num_classes: int,
         reduction: Literal["mean", "first"] = "mean",
+        **model_args,
     ):
+        super().__init__()
         self.model = models.TransformerModel(
             vocab_size=vocab_size,
             context_length=context_length,
             d_model=d_model,
             num_heads=num_heads,
             num_layers=num_layers,
+            **model_args,
         )
         self.mlp = layers.Sequential(
             layers.Linear(d_model, d_model * 4),
