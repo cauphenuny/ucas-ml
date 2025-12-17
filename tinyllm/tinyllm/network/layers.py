@@ -325,10 +325,16 @@ class MultiheadSelfAttention(Module):
         max_seq_len = x.shape[-2]
         if sequence_length is not None:
             rows = torch.arange(max_seq_len, device=self.device)
-            valid: Bool[Tensor, " ... seq_len"] = rows < sequence_length.unsqueeze(-1)
+            valid: Bool[Tensor, " ... seq_len"] | None = (
+                rows < sequence_length.unsqueeze(-1)
+            )
             padding_mask: Bool[Tensor, " ... len_q len_k"] | None = einops.einsum(
                 valid, valid, "... len_q, ... len_k -> ... len_q len_k"
             )
+            padding_mask = (
+                padding_mask | torch.eye(max_seq_len, device=self.device).bool()
+            )
+            padding_mask = padding_mask.unsqueeze(-3)  # for num_heads
         else:
             padding_mask = None
 
