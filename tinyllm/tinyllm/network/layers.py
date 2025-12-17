@@ -1,6 +1,6 @@
 import torch
 import einops
-from jaxtyping import Float, Int
+from jaxtyping import Bool, Float, Int
 from torch import Tensor
 from typing import Literal
 from . import functional
@@ -304,6 +304,7 @@ class MultiheadSelfAttention(Module):
         self,
         x: Float[Tensor, " ... seq_len d_model"],
         token_positions: Int[Tensor, " ... seq_len"] | None = None,
+        sequence_length: Int[Tensor, " ..."] | None = None,
     ):
         q = self.q_proj(x)
         k = self.k_proj(x)
@@ -320,11 +321,26 @@ class MultiheadSelfAttention(Module):
         if self.rope:
             q = self.rope(q, token_positions)
             k = self.rope(k, token_positions)
-        if self.casual:
-            seq_len = x.shape[-2]
-            mask = torch.arange(seq_len, device=self.device).reshape(-1, 1) >= torch.arange(seq_len, device=self.device)
+
+        max_seq_len = x.shape[-2]
+        if sequence_length is not None:
+            rows = torch.arange(max_seq_len, device=self.device)
+            valid: Bool[Tensor, " ... seq_len"] = rows < sequence_length.unsqueeze(-1)
+            padding_mask: Bool[Tensor, " ... len_q len_k"] | None = einops.einsum(
+                valid, valid, "... len_q, ... len_k -> ... len_q len_k"
+            )
         else:
-            mask = None
+            padding_mask = None
+
+        if self.casual:
+            mask = torch.arange(max_seq_len, device=self.device).reshape(-1, 1) >= torch.arange(
+                max_seq_len, device=self.device
+            )
+            if padding_mask is not None:
+                mask = mask & padding_mask
+        else:
+            mask = padding_mask
+
         attn_output = functional.scaled_dot_product_attention(q, k, v, mask=mask)
         attn_output = einops.rearrange(
             attn_output,

@@ -37,12 +37,16 @@ class TransformerBlock(Module):
         self.ffn = FeedForward(d_model, d_ff, activate=ffn_activate, device=device, dtype=dtype)
         self.norm_location = norm_location
 
-    def forward(self, x: Float[torch.Tensor, " ... seq_len d_model"]):
+    def forward(
+        self,
+        x: Float[torch.Tensor, " ... seq_len d_model"],
+        len: Int[torch.Tensor, " ..."] | None = None,
+    ):
         if self.norm_location == "pre":
-            x = x + self.attn(self.ln1(x))
+            x = x + self.attn(self.ln1(x), sequence_length=len)
             x = x + self.ffn(self.ln2(x))
         elif self.norm_location == "post":
-            x = self.ln1(x + self.attn(x))
+            x = self.ln1(x + self.attn(x, sequence_length=len))
             x = self.ln2(x + self.ffn(x))
         else:
             raise NotImplementedError(f"unsupported norm_location: {self.norm_location}")
@@ -110,19 +114,22 @@ class TransformerModel(Module):
     def forward(
         self,
         x: Int[torch.Tensor, " ... seq_len"],
-        lm_head: Literal[True],
+        len: Int[torch.Tensor, " ..."] | None = None,
+        lm_head: Literal[True] = True,
     ) -> Float[torch.Tensor, " ... seq_len vocab_size"]: ...
 
     @overload
     def forward(
         self,
         x: Int[torch.Tensor, " ... seq_len"],
-        lm_head: Literal[False],
+        len: Int[torch.Tensor, " ..."] | None = None,
+        lm_head: Literal[False] = False,
     ) -> Float[torch.Tensor, " ... seq_len d_model"]: ...
 
     def forward(
         self,
         x: Int[torch.Tensor, " ... seq_len"],
+        len: Int[torch.Tensor, " ..."] | None = None,
         lm_head: bool = True,
     ):
         assert x.dtype in (torch.int16, torch.int32, torch.int64, torch.uint8, torch.bool, torch.long)
