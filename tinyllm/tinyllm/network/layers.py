@@ -90,6 +90,11 @@ class Linear(Module):
     def forward(self, x: Tensor) -> Tensor:
         return x @ self.weight.T
 
+    def __repr__(self):
+        return (
+            f"Linear(in_features={self.in_features}, out_features={self.out_features})"
+        )
+
 
 class Embedding(Module):
     def __init__(
@@ -125,6 +130,9 @@ class Embedding(Module):
             Tensor: Embedded representations of the input token IDs.
         """
         return self.weight[token_ids]
+
+    def __repr__(self):
+        return f"Embedding({self.weight.shape[0]}, {self.weight.shape[1]})"
 
 
 class RMSNorm(Module):
@@ -165,6 +173,9 @@ class RMSNorm(Module):
         rms = torch.sqrt(torch.mean(x_f32**2, dim=-1, keepdim=True) + self.eps)
         result = x_f32 / rms * self.weight
         return result.to(in_dtype)
+
+    def __repr__(self):
+        return f"RMSNorm({self.weight.shape[0]})"
 
 
 class FeedForward(Module):
@@ -212,6 +223,11 @@ class FeedForward(Module):
             return self.w2(functional.silu(self.w1(x)))
         else:
             raise NotImplementedError(f"unsupported activate func: {self.activate}")
+
+    def __repr__(self):
+        return (
+            f"FeedForward(d_model={self.w1.in_features}, d_ff={self.w1.out_features})"
+        )
 
 
 class RoPE(Module):
@@ -354,3 +370,6 @@ class MultiheadSelfAttention(Module):
             num_heads=self.num_heads,
         )
         return self.output_proj(attn_output)
+
+    def __repr__(self):
+        return f"MultiheadSelfAttention(d_model={self.q_proj.in_features}, num_heads={self.num_heads})"
