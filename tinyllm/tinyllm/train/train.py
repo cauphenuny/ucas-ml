@@ -259,6 +259,7 @@ def main():
 
     if args.compile:
         model.compile(backend=compile_backend())
+        torch.set_float32_matmul_precision('high')
 
     with profile(enable=args.profile, json_trace_file=trace_path if args.profile else None) as prof:
         try:
