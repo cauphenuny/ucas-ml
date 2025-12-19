@@ -6,7 +6,6 @@ from typing import Literal
 
 
 class TransformerClassifier(torch.nn.Module):
-
     def __init__(
         self,
         num_classes: int,
@@ -29,18 +28,18 @@ class TransformerClassifier(torch.nn.Module):
             causal=causal,
             **model_args,
         )
-        self.mlp = layers.Sequential(
+        self.classifier = layers.Sequential(
             layers.Linear(d_model, d_model * 4),
             layers.SiLU(),
             layers.Linear(d_model * 4, num_classes),
         )
         if reduction == "first":
-            self.reduction = lambda x, l: x[:, 0, :]
+            self.reduction = lambda x, _l: x[:, 0, :]
         elif reduction == "mean":
 
             def reduction_fn(
-                x: Int[torch.Tensor, "batch seq_len d_model"],
-                seq_len: Int[torch.Tensor, "batch"] | None,
+                x: Int[torch.Tensor, " batch seq_len d_model"],
+                seq_len: Int[torch.Tensor, " batch"] | None,
             ):
                 if seq_len is None:
                     return x.mean(dim=-2)
@@ -54,15 +53,13 @@ class TransformerClassifier(torch.nn.Module):
         elif reduction == "last":
 
             def reduction_fn(
-                x: Int[torch.Tensor, "batch seq_len d_model"],
-                seq_len: Int[torch.Tensor, "batch"] | None,
+                x: Int[torch.Tensor, " batch seq_len d_model"],
+                seq_len: Int[torch.Tensor, " batch"] | None,
             ):
                 if seq_len is None:
                     return x[:, -1, :]
                 batch_size = x.size(0)
-                idx = (
-                    (seq_len - 1).unsqueeze(1).unsqueeze(2).expand(batch_size, 1, x.size(2))
-                )
+                idx = (seq_len - 1).unsqueeze(1).unsqueeze(2).expand(batch_size, 1, x.size(2))
                 return x.gather(1, idx).squeeze(1)
 
             self.reduction = reduction_fn
@@ -74,7 +71,7 @@ class TransformerClassifier(torch.nn.Module):
     ) -> Float[torch.Tensor, "... num_classes"]:
         x = self.model(x, len=len, lm_head=False)
         x = self.reduction(x, len)
-        x = self.mlp(x)
+        x = self.classifier(x)
         return x
 
     def predict(self, phrases: list[str], tokenizer: Tokenizer) -> list[int]:
@@ -82,9 +79,7 @@ class TransformerClassifier(torch.nn.Module):
         length = [len(t) for t in tokenized]
         max_len = max(length)
         device = next(self.parameters()).device
-        input_ids = torch.zeros(
-            (len(phrases), max_len), dtype=torch.int64, device=device
-        )
+        input_ids = torch.zeros((len(phrases), max_len), dtype=torch.int64, device=device)
         for i, t in enumerate(tokenized):
             input_ids[i, : len(t)] = torch.tensor(t, dtype=torch.int64, device=device)
         logits = self.forward(input_ids, len=torch.tensor(length, device=device))
