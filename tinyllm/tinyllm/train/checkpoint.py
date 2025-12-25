@@ -59,7 +59,7 @@ def load_checkpoint(
 
 
 def load_model(src: str | os.PathLike | typing.BinaryIO | typing.IO[bytes]):
-    checkpoint: dict = torch.load(src)
+    checkpoint: dict = torch.load(src, map_location="cpu")
     model_args: dict = checkpoint.get(
         "model_args",
         {
@@ -73,6 +73,7 @@ def load_model(src: str | os.PathLike | typing.BinaryIO | typing.IO[bytes]):
             "device": ACCL_DEVICE,
         },
     )
+    model_args['device'] = ACCL_DEVICE
     logger.info(f"Loaded model with args: {model_args}")
     perplexity = checkpoint.get("perplexity", checkpoint.get("best_perplexity", None))
     if perplexity:
