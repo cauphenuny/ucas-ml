@@ -1,5 +1,5 @@
 import torch
-from tinyllm.tokenize.tokenizer import Tokenizer
+from ..classifier import Tokenizer
 from tinyllm.network.multiplatform import ACCL_DEVICE
 
 def to_tensor(tokenizer: Tokenizer, device: torch.device | str | None = ACCL_DEVICE):

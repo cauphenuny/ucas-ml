@@ -12,7 +12,8 @@ from torch import save as torch_save
 from app import dataloader
 from app.utils import PROJECT_ROOT
 from app.classifier import Classifier, TinyLLMClassifier
-from tinyllm.tokenize.tokenizer import Tokenizer
+from app.classifier import Tokenizer
+from tinyllm.tokenize.tokenizer import Tokenizer as TinyLLMTokenizer
 from tinyllm.network.models import specifications as model_specs
 from tinyllm.network.multiplatform import ACCL_DEVICE
 from tinyllm.network.functional import cross_entropy
@@ -121,7 +122,7 @@ output_dir = PROJECT_ROOT / args.output_dir
 output_dir.mkdir(parents=True, exist_ok=True)
 
 # %%
-tokenizer = Tokenizer.from_dir(PROJECT_ROOT / "ckpts" / "tokenizer" / f"{args.tokenizer}-{args.vocab_size}")
+tokenizer: Tokenizer = TinyLLMTokenizer.from_dir(PROJECT_ROOT / "ckpts" / "tokenizer" / f"{args.tokenizer}-{args.vocab_size}")
 
 # %%
 data_path = PROJECT_ROOT / "data" / "sentiment-analysis-on-movie-reviews"

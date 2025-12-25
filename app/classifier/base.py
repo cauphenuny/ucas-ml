@@ -1,9 +1,13 @@
 import torch
 from jaxtyping import Float, Int
 from abc import ABC, abstractmethod
-from tinyllm.tokenize.tokenizer import Tokenizer
+from typing import Protocol
 
-class TorchClassifier(torch.nn.Module, ABC):
+class Tokenizer(Protocol):
+    def encode(self, text: str) -> list[int]: ...
+
+
+class Classifier(torch.nn.Module, ABC):
     @abstractmethod
     def forward(
         self,

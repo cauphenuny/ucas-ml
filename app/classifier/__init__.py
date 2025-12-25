@@ -1,2 +1,2 @@
 from .tinyllm import TinyLLMClassifier
-from .base import Classifier
+from .base import Classifier, Tokenizer
