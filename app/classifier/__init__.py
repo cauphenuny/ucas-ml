@@ -1,1 +1,2 @@
-from .transformer import TransformerClassifier
+from .tinyllm import TinyLLMClassifier
+from .base import Classifier

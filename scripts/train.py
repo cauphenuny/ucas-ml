@@ -11,7 +11,7 @@ from torch import save as torch_save
 # %%
 from app import dataloader
 from app.utils import PROJECT_ROOT
-from app.classifier import TransformerClassifier
+from app.classifier import Classifier, TinyLLMClassifier
 from tinyllm.tokenize.tokenizer import Tokenizer
 from tinyllm.network.models import specifications as model_specs
 from tinyllm.network.multiplatform import ACCL_DEVICE
@@ -152,7 +152,7 @@ test = pd.read_csv(test_path, sep="\t", dtype=str, na_filter=False)
 spec = model_specs(args.model_size)
 spec["share_embeddings"] = False
 num_classes = 5
-model = TransformerClassifier(
+model: Classifier = TinyLLMClassifier(
     vocab_size=args.vocab_size,
     context_length=256,
     num_classes=num_classes,
@@ -222,12 +222,12 @@ def validate():
 
 
 # %%
-def freeze(model: TransformerClassifier):
+def freeze(model: TinyLLMClassifier):
     for param in model.model.parameters():
         param.requires_grad = False
 
 
-def release(model: TransformerClassifier):
+def release(model: TinyLLMClassifier):
     for param in model.model.parameters():
         param.requires_grad = True
 

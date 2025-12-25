@@ -1,11 +1,10 @@
 from tinyllm.network import models, layers
-from tinyllm.tokenize.tokenizer import Tokenizer
 from jaxtyping import Float, Int
 import torch
 from typing import Literal
+from .base import Classifier
 
-
-class TransformerClassifier(torch.nn.Module):
+class TinyLLMClassifier(Classifier):
     def __init__(
         self,
         num_classes: int,
@@ -73,15 +72,3 @@ class TransformerClassifier(torch.nn.Module):
         x = self.reduction(x, len)
         x = self.classifier(x)
         return x
-
-    def predict(self, phrases: list[str], tokenizer: Tokenizer) -> list[int]:
-        tokenized = [tokenizer.encode(phrase) for phrase in phrases]
-        length = [len(t) for t in tokenized]
-        max_len = max(length)
-        device = next(self.parameters()).device
-        input_ids = torch.zeros((len(phrases), max_len), dtype=torch.int64, device=device)
-        for i, t in enumerate(tokenized):
-            input_ids[i, : len(t)] = torch.tensor(t, dtype=torch.int64, device=device)
-        logits = self.forward(input_ids, len=torch.tensor(length, device=device))
-        predictions = torch.argmax(logits, dim=-1)
-        return predictions.tolist()
