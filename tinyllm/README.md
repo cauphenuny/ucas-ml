@@ -7,7 +7,7 @@ cd scripts
 # train tokenizer
 uv run bpe.py --help
 # tokenize training data
-uv run tokenize.py --help
+uv run run_tokenizer.py --help
 # train
 uv run train.py --help
 ```
