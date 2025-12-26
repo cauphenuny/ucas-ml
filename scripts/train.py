@@ -19,7 +19,7 @@ from tinyllm.network.models import specifications as model_specs
 from tinyllm.network.multiplatform import ACCL_DEVICE
 from tinyllm.network.functional import cross_entropy
 from tinyllm.optimize.optimizers import AdamW
-from tinyllm.optimize.lr_scheduler import CosineLRScheduler
+from tinyllm.optimize.lr_scheduler import CosineLRScheduler, ConstantLRScheduler
 
 # %%
 parser = argparse.ArgumentParser()
