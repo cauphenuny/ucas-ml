@@ -1,4 +1,5 @@
 # %%
+import wandb
 import pandas as pd
 import argparse
 from tqdm import tqdm
@@ -111,6 +112,13 @@ parser.add_argument(
     "--submit_file", type=str, default=None, help="Filename for submission"
 )
 
+parser.add_argument(
+    "--wandb_project", type=str, default="UCAS ML 2025", help="Weights & Biases project name"
+)
+parser.add_argument(
+    "--wandb_run_name", type=str, default=None, help="Weights & Biases run name"
+)
+
 args = parser.parse_args()
 
 # %%
@@ -218,7 +226,7 @@ elif args.lr_scheduler == "cosine":
 
 # %%
 best_valid_loss = float("inf")
-def validate():
+def validate(global_step):
     valid_loss = 0.0
     correct = 0
     counter = [0] * num_classes
@@ -252,6 +260,11 @@ def validate():
         if args.save_ckpt is not None and args.save_best_only:
             print(f"New best model found, saving checkpoint to {args.save_ckpt}...")
             torch_save(model.state_dict(), output_dir / args.save_ckpt)
+    if args.wandb_run_name:
+        wandb.log({
+            "valid/loss": valid_loss,
+            "valid/accuracy": correct / len(valid),
+        }, step=global_step)
     return valid_loss
 
 
@@ -267,6 +280,12 @@ def release(model: TinyLLMClassifier):
 
 
 # %%
+if args.wandb_run_name:
+    wandb.init(project=args.wandb_project, name=args.wandb_run_name, config=vars(args))
+
+# %%
+global_step = 0
+
 if args.load_ckpt is None:
     try:
         if args.freeze_base_model:
@@ -274,7 +293,6 @@ if args.load_ckpt is None:
             freeze(model)
 
         print(f"Training on device: {args.device}")
-        global_step = 0
         for epoch in range(args.epoch):
             print(f"Starting epoch {epoch + 1}/{args.epoch}...")
             model.train()
@@ -283,7 +301,7 @@ if args.load_ckpt is None:
             with tqdm(total=len(train_dataloader), desc=f"Epoch {epoch + 1}") as pbar:
                 for idx, batch in enumerate(train_dataloader):
                     if idx % 1000 == 0:
-                        validate()
+                        validate(global_step)
                         model.train()
                     input_ids = batch["input_ids"]
                     lengths = batch["lengths"]
@@ -304,6 +322,12 @@ if args.load_ckpt is None:
                         assert isinstance(model, TinyLLMClassifier)
                         print("Releasing base model parameters...")
                         release(model)
+                    if args.wandb_run_name:
+                        wandb.log({
+                            "train/loss": loss.item(),
+                            "train/ema_loss": ema_loss,
+                            "train/lr": avg_lr,
+                        }, step=global_step)
     except Exception:
         import traceback
         import pdb
@@ -316,9 +340,8 @@ if args.load_ckpt is None:
 else:
     model.load_state_dict(torch_load(output_dir / args.load_ckpt))
 
-# %%
 print("Final evaluation on validation set:")
-validate()
+validate(global_step)
 
 # %%
 if args.submit_file is not None:
