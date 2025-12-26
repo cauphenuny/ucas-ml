@@ -122,6 +122,10 @@ parser.add_argument(
 args = parser.parse_args()
 
 # %%
+if args.wandb_run_name:
+    wandb.init(project=args.wandb_project, name=args.wandb_run_name, config=vars(args))
+
+# %%
 use_tinyllm = args.classifier == "tinyllm"
 
 if use_tinyllm:
@@ -278,10 +282,6 @@ def release(model: TinyLLMClassifier):
     for param in model.model.parameters():
         param.requires_grad = True
 
-
-# %%
-if args.wandb_run_name:
-    wandb.init(project=args.wandb_project, name=args.wandb_run_name, config=vars(args))
 
 # %%
 global_step = 0
