@@ -325,7 +325,6 @@ if args.load_ckpt is None:
                     if args.wandb_run_name:
                         wandb.log({
                             "train/loss": loss.item(),
-                            "train/ema_loss": ema_loss,
                             "train/lr": avg_lr,
                         }, step=global_step)
     except Exception:
