@@ -5,8 +5,11 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "hf-xet>=1.2.0",
+    "ipykernel>=7.1.0",
     "scikit-learn>=1.7.2",
     "tinyllm",
+    "transformers>=4.57.3",
 ]
 
 [build-system]

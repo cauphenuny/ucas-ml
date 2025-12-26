@@ -11,8 +11,8 @@ from torch import save as torch_save
 # %%
 from app import dataloader
 from app.utils import PROJECT_ROOT
-from app.classifier import Classifier, TinyLLMClassifier
-from app.classifier import Tokenizer
+from app.classifier import Classifier, TinyLLMClassifier, TransformersClassifier
+from app.classifier import Tokenizer, TransformersTokenizer
 from tinyllm.tokenize.tokenizer import Tokenizer as TinyLLMTokenizer
 from tinyllm.network.models import specifications as model_specs
 from tinyllm.network.multiplatform import ACCL_DEVICE
@@ -28,6 +28,19 @@ parser.add_argument("--device", type=str, default=ACCL_DEVICE)
 parser.add_argument("--epoch", type=int, default=1)
 parser.add_argument("--batch_size", type=int, default=32)
 parser.add_argument("--lr", type=float, default=1e-4)
+parser.add_argument(
+    "--classifier",
+    type=str,
+    default="tinyllm",
+    choices=["tinyllm", "transformers"],
+    help="Choose classifier backend",
+)
+parser.add_argument(
+    "--hf_model",
+    type=str,
+    default="siebert/sentiment-roberta-large-english",
+    help="HF model name when using transformers classifier",
+)
 
 parser.add_argument("--output_dir", type=str, default="output")
 parser.add_argument("--save_ckpt", type=str, default=None, help="Filename to save the model checkpoint")
@@ -101,19 +114,28 @@ parser.add_argument(
 args = parser.parse_args()
 
 # %%
-if args.reduction in ("first", "mean"):
-    if not args.no_causal:
-        args.no_causal = True
-        logger.warning(
-            f"Causal masking is only compatible with 'last' reduction, current reduction: '{args.reduction}'")
-        logger.warning("Auto set --no-causal to disable causal masking")
-    if args.base_model is not None:
-        logger.warning("Base model loading is only compatible with 'last' reduction, ignoring --base_model")
-        args.base_model = None
+use_tinyllm = args.classifier == "tinyllm"
 
-if args.freeze_base_model and args.base_model is None:
-    logger.warning("Freezing base model is only compatible with a loaded base model, ignoring --freeze_base_model")
-    args.freeze_base_model = False
+if use_tinyllm:
+    if args.reduction in ("first", "mean"):
+        if not args.no_causal:
+            args.no_causal = True
+            logger.warning(
+                f"Causal masking is only compatible with 'last' reduction, current reduction: '{args.reduction}'")
+            logger.warning("Auto set --no-causal to disable causal masking")
+        if args.base_model is not None:
+            logger.warning("Base model loading is only compatible with 'last' reduction, ignoring --base_model")
+            args.base_model = None
+    if args.freeze_base_model and args.base_model is None:
+        logger.warning("Freezing base model is only compatible with a loaded base model, ignoring --freeze_base_model")
+        args.freeze_base_model = False
+else:
+    if args.base_model is not None:
+        logger.warning("--base_model is only supported for tinyllm classifier, ignoring")
+        args.base_model = None
+    if args.freeze_base_model:
+        logger.warning("--freeze_base_model is only supported for tinyllm classifier, ignoring")
+        args.freeze_base_model = False
 
 print(f"Parameters: {vars(args)}")
 
@@ -122,7 +144,12 @@ output_dir = PROJECT_ROOT / args.output_dir
 output_dir.mkdir(parents=True, exist_ok=True)
 
 # %%
-tokenizer: Tokenizer = TinyLLMTokenizer.from_dir(PROJECT_ROOT / "ckpts" / "tokenizer" / f"{args.tokenizer}-{args.vocab_size}")
+if use_tinyllm:
+    tokenizer: Tokenizer = TinyLLMTokenizer.from_dir(
+        PROJECT_ROOT / "ckpts" / "tokenizer" / f"{args.tokenizer}-{args.vocab_size}"
+    )
+else:
+    tokenizer: Tokenizer = TransformersTokenizer(args.hf_model)
 
 # %%
 data_path = PROJECT_ROOT / "data" / "sentiment-analysis-on-movie-reviews"
@@ -150,20 +177,26 @@ valid_dataloader = DataLoader(
 test = pd.read_csv(test_path, sep="\t", dtype=str, na_filter=False)
 
 # %%
-spec = model_specs(args.model_size)
-spec["share_embeddings"] = False
 num_classes = 5
-model: Classifier = TinyLLMClassifier(
-    vocab_size=args.vocab_size,
-    context_length=256,
-    num_classes=num_classes,
-    causal=not args.no_causal,
-    reduction=args.reduction,
-    **spec,
-)
+if use_tinyllm:
+    spec = model_specs(args.model_size)
+    spec["share_embeddings"] = False
+    model: Classifier = TinyLLMClassifier(
+        vocab_size=args.vocab_size,
+        context_length=256,
+        num_classes=num_classes,
+        causal=not args.no_causal,
+        reduction=args.reduction,
+        **spec,
+    )
+else:
+    model = TransformersClassifier(
+        model_name=args.hf_model,
+        num_classes=num_classes,
+    )
 print("Model architecture:")
 print(model)
-if args.base_model is not None:
+if use_tinyllm and args.base_model is not None:
     print(f"Loading base model from {args.base_model}...")
     base_state_dict = torch_load(args.base_model, map_location="cpu")
     model.model.load_state_dict(base_state_dict, strict=False)
