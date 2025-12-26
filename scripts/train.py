@@ -47,6 +47,7 @@ parser.add_argument("--output_dir", type=str, default="output")
 parser.add_argument("--save_ckpt", type=str, default=None, help="Filename to save the model checkpoint")
 parser.add_argument("--save_best_only", action="store_true", help="Save only the best model checkpoint based on validation loss")
 parser.add_argument("--load_ckpt", type=str, default=None, help="Filename to load the model checkpoint")
+parser.add_argument("--valid_interval", type=int, default=1000, help="Validation interval in steps")
 
 parser.add_argument("--base_model", type=str, default=None, help="Path to base model checkpoint to load")
 parser.add_argument("--freeze_base_model", action="store_true", help="Freeze base model parameters during training")
@@ -315,7 +316,7 @@ if args.load_ckpt is None:
             ema_loss = 0.0
             with tqdm(total=len(train_dataloader), desc=f"Epoch {epoch + 1}") as pbar:
                 for idx, batch in enumerate(train_dataloader):
-                    if idx % 1000 == 0:
+                    if idx % args.valid_interval == 0:
                         validate(global_step)
                         model.train()
                     input_ids = batch["input_ids"]
