@@ -39,3 +39,11 @@ class TransformersTokenizer(Tokenizer):
 
     def encode(self, text: str) -> list[int]:
         return self.tokenizer.encode(text, truncation=True)
+
+    @property
+    def pad_token_id(self) -> int:
+        return self.tokenizer.pad_token_id
+
+    @property
+    def eos_token_id(self) -> int:
+        return self.tokenizer.eos_token_id

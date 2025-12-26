@@ -208,9 +208,12 @@ if use_tinyllm:
         **spec,
     )
 else:
+    pad_token = tokenizer.pad_token_id if tokenizer.pad_token_id is not None else tokenizer.eos_token_id
+    print(f"Pad token ID: {pad_token}")
     model = TransformersClassifier(
         model_name=args.hf_model,
         num_classes=num_classes,
+        pad_token_id=pad_token,
     )
 print("Model architecture:")
 print(model)
