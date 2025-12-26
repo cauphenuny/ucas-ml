@@ -3,6 +3,18 @@ import torch
 from collections.abc import Iterable
 
 
+def lr_constant_schedule(
+    it: int,
+    max_learning_rate: float,
+    min_learning_rate: float,
+    warmup_iters: int,
+):
+    if it > warmup_iters:
+        return max_learning_rate
+    else:
+        return min_learning_rate + (max_learning_rate - min_learning_rate) * it / warmup_iters
+
+
 def lr_cosine_schedule(
     it: int,
     max_learning_rate: float,

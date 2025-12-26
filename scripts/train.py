@@ -90,9 +90,15 @@ parser.add_argument(
 parser.add_argument(
     "--lr_scheduler",
     type=str,
-    default="none",
+    default="constant",
     help="Learning rate scheduler: none, cosine",
-    choices=["none", "cosine"],
+    choices=["constant", "cosine"],
+)
+parser.add_argument(
+    "--lr_warmup_ratio",
+    type=float,
+    default=0.06,
+    help="Learning rate warmup ratio",
 )
 
 parser.add_argument(
@@ -223,10 +229,16 @@ optimizer = AdamW(
     weight_decay=0.01,
 )
 
-if args.lr_scheduler == "none":
-    lr_scheduler = None
+lr_scheduler_kwargs = dict(
+    optimizer=optimizer,
+    total_steps=len(train_dataloader) * args.epoch,
+    warmup_ratio=args.lr_warmup_ratio,
+)
+
+if args.lr_scheduler == "constant":
+    lr_scheduler = ConstantLRScheduler(**lr_scheduler_kwargs)
 elif args.lr_scheduler == "cosine":
-    lr_scheduler = CosineLRScheduler(optimizer=optimizer, total_steps=len(train_dataloader) * args.epoch)
+    lr_scheduler = CosineLRScheduler(**lr_scheduler_kwargs)
 
 # %%
 best_valid_loss = float("inf")
