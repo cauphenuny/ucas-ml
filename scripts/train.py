@@ -145,11 +145,11 @@ output_dir.mkdir(parents=True, exist_ok=True)
 
 # %%
 if use_tinyllm:
-    tokenizer: Tokenizer = TinyLLMTokenizer.from_dir(
+    tokenizer = TinyLLMTokenizer.from_dir(
         PROJECT_ROOT / "ckpts" / "tokenizer" / f"{args.tokenizer}-{args.vocab_size}"
     )
 else:
-    tokenizer: Tokenizer = TransformersTokenizer(args.hf_model)
+    tokenizer = TransformersTokenizer(args.hf_model)
 
 # %%
 data_path = PROJECT_ROOT / "data" / "sentiment-analysis-on-movie-reviews"
@@ -270,6 +270,7 @@ def release(model: TinyLLMClassifier):
 if args.load_ckpt is None:
     try:
         if args.freeze_base_model:
+            assert isinstance(model, TinyLLMClassifier)
             freeze(model)
 
         print(f"Training on device: {args.device}")
@@ -300,6 +301,7 @@ if args.load_ckpt is None:
                     if lr_scheduler:
                         lr_scheduler.update(global_step)
                     if global_step == args.release_steps and args.freeze_base_model:
+                        assert isinstance(model, TinyLLMClassifier)
                         print("Releasing base model parameters...")
                         release(model)
     except Exception:
