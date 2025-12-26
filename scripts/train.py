@@ -319,6 +319,7 @@ if args.load_ckpt is None:
                     if idx % args.valid_interval == 0:
                         validate(global_step)
                         model.train()
+                    lr_scheduler.update(global_step)
                     input_ids = batch["input_ids"]
                     lengths = batch["lengths"]
                     labels = batch["labels"]
@@ -332,8 +333,6 @@ if args.load_ckpt is None:
                     pbar.set_postfix({"loss": f"{ema_loss:.3f}", "lr": f"{avg_lr:.2e}"})
                     pbar.update(1)
                     global_step += 1
-                    if lr_scheduler:
-                        lr_scheduler.update(global_step)
                     if global_step == args.release_steps and args.freeze_base_model:
                         assert isinstance(model, TinyLLMClassifier)
                         print("Releasing base model parameters...")
