@@ -237,7 +237,7 @@ def main():
     total_steps = len(train_dataloader) * args.epoch
     lr_scheduler_kwargs = dict(
         optimizer=optimizer,
-        total_steps=len(train_dataloader) * args.epoch,
+        total_steps=total_steps,
         warmup_ratio=args.lr_warmup_ratio,
     )
     if args.lr_scheduler == "constant":

@@ -137,6 +137,7 @@ class Trainer:
                     if idx % self.args.valid_interval == 0:
                         self.validate()
                         self.model.train()
+                    self._apply_warmup()
                     input_ids = batch["input_ids"]
                     lengths = batch["lengths"]
                     labels = batch["labels"]
@@ -146,7 +147,6 @@ class Trainer:
                     loss.backward()
                     self.optimizer.step()
                     self.global_step += 1
-                    self._apply_warmup()
                     ema_loss = 0.98 * ema_loss + 0.02 * loss.item() if ema_loss != 0.0 else loss.item()
                     avg_lr = sum(group["lr"] for group in self.optimizer.param_groups) / len(self.optimizer.param_groups)
                     pbar.set_postfix({"loss": f"{ema_loss:.3f}", "lr": f"{avg_lr:.2e}"})
