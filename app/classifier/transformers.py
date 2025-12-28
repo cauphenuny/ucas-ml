@@ -41,6 +41,10 @@ class TransformersTokenizer(Tokenizer):
         return self.tokenizer.encode(text, truncation=True)
 
     @property
+    def vocab_size(self) -> int:
+        return self.tokenizer.vocab_size
+
+    @property
     def pad_token_id(self) -> int:
         return self.tokenizer.pad_token_id
 

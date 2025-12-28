@@ -9,7 +9,12 @@ from torch import save as torch_save
 # %%
 from app import dataloader
 from app.utils import PROJECT_ROOT
-from app.classifier import Classifier, TinyLLMClassifier, TransformersClassifier
+from app.classifier import (
+    Classifier,
+    TinyLLMClassifier,
+    TransformersClassifier,
+    LSTMClassifier,
+)
 from app.classifier import Tokenizer, TransformersTokenizer
 from app.trainer import TrainingArgs, Trainer
 from tinyllm.tokenize.tokenizer import Tokenizer as TinyLLMTokenizer
@@ -253,6 +258,17 @@ def main():
             causal=not args.no_causal,
             reduction=args.reduction,
             **spec,
+        )
+    elif args.classifier == "lstm":
+        assert isinstance(tokenizer, TransformersTokenizer)
+        model = LSTMClassifier(
+            num_classes=num_classes,
+            vocab_size=tokenizer.vocab_size,
+            embedding_dim=args.embedding_dim,
+            hidden_dim=args.hidden_dim,
+            num_layers=args.num_layers,
+            dropout=args.dropout,
+            reduction=args.reduction,
         )
     else:
         assert isinstance(tokenizer, TransformersTokenizer)
