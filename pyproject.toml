@@ -10,6 +10,7 @@ dependencies = [
     "ipykernel>=7.1.0",
     "joblib>=1.5.3",
     "loguru>=0.7.3",
+    "modelscope>=1.33.0",
     "pandas>=2.3.3",
     "scikit-learn==1.7.2",
     "tinyllm",
