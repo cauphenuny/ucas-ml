@@ -22,7 +22,6 @@ class TrainingArgs:
     save_ckpt: str | None
     save_best_only: bool
     submit_file: str | None
-    use_tinyllm: bool
     device: str
     wandb_project: str
     wandb_run_name: str
@@ -71,14 +70,14 @@ class Trainer:
         return None
 
     def freeze(self):
-        if self.args.use_tinyllm:
-            for param in self.model.model.parameters():
-                param.requires_grad = False
+        assert isinstance(self.model, TinyLLMClassifier)
+        for param in self.model.model.parameters():
+            param.requires_grad = False
 
     def release(self):
-        if self.args.use_tinyllm:
-            for param in self.model.model.parameters():
-                param.requires_grad = True
+        assert isinstance(self.model, TinyLLMClassifier)
+        for param in self.model.model.parameters():
+            param.requires_grad = True
 
     def validate(self):
         valid_loss = 0.0
@@ -123,10 +122,11 @@ class Trainer:
 
     def train(self):
         if self.args.freeze_base_model:
-            assert isinstance(self.model, TinyLLMClassifier)
             self.freeze()
 
         print(f"Training on device: {self.args.device}")
+        print("Architecture: ")
+        print(self.model)
         for epoch in range(self.args.epochs):
             print(f"Starting epoch {epoch + 1}/{self.args.epochs}...")
             self.model.train()

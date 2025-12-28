@@ -28,64 +28,12 @@ def parse_args():
     parser.add_argument("--epoch", type=int, default=1)
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--lr", type=float, default=2e-5)
-    parser.add_argument(
-        "--classifier",
-        type=str,
-        default="tinyllm",
-        choices=["tinyllm", "transformers"],
-        help="Choose classifier backend",
-    )
-    parser.add_argument(
-        "--hf_model",
-        type=str,
-        default="siebert/sentiment-roberta-large-english",
-        help="HF model name when using transformers classifier",
-    )
 
     parser.add_argument("--output_dir", type=str, default="output")
     parser.add_argument("--save_ckpt", type=str, default=None, help="Filename to save the model checkpoint")
     parser.add_argument("--save_best_only", action="store_true", help="Save only the best model checkpoint based on validation loss")
     parser.add_argument("--load_ckpt", type=str, default=None, help="Filename to load the model checkpoint")
     parser.add_argument("--valid_interval", type=int, default=1000, help="Validation interval in steps")
-
-    parser.add_argument("--base_model", type=str, default=None, help="Path to base model checkpoint to load")
-    parser.add_argument("--freeze_base_model", action="store_true", help="Freeze base model parameters during training")
-    parser.add_argument(
-        "--release_steps",
-        type=int,
-        default=1000,
-        help="Number of steps to release the frozen base model",
-    )
-
-    parser.add_argument(
-        "--model_size",
-        type=str,
-        default="tiny",
-        help="Model size: nano, micro, tiny, small, medium, large, x-large, xx-large, 3x-large",
-        choices=[
-            "nano",
-            "micro",
-            "tiny",
-            "small",
-            "medium",
-            "large",
-            "x-large",
-            "xx-large",
-            "3x-large",
-        ],
-    )
-    parser.add_argument(
-        "--reduction",
-        type=str,
-        default="first",
-        help="Reduction method: mean, first, last",
-        choices=["mean", "first", "last"],
-    )
-    parser.add_argument(
-        "--no-causal",
-        action="store_true",
-        help="Do not use causal masking in the transformer",
-    )
 
     parser.add_argument(
         "--lr_scheduler",
@@ -102,27 +50,133 @@ def parse_args():
     )
 
     parser.add_argument(
+        "--submit_file", type=str, default=None, help="Filename for submission"
+    )
+
+    parser.add_argument(
+        "--wandb_project",
+        type=str,
+        default="UCAS ML 2025",
+        help="Weights & Biases project name",
+    )
+    parser.add_argument(
+        "--wandb_run_name", type=str, default=None, help="Weights & Biases run name"
+    )
+
+    subparsers = parser.add_subparsers(
+        title="classifier", 
+        dest="classifier", 
+        help="Classifier Backend",
+        required=True,
+    )
+    tinyllm_parser = subparsers.add_parser("tinyllm")
+    transformers_parser = subparsers.add_parser("transformers")
+    lstm_parser = subparsers.add_parser("lstm")
+
+    tinyllm_parser.add_argument(
+        "--base_model",
+        type=str,
+        default=None,
+        help="Path to base model checkpoint to load",
+    )
+    tinyllm_parser.add_argument(
+        "--freeze_base_model",
+        action="store_true",
+        help="Freeze base model parameters during training",
+    )
+    tinyllm_parser.add_argument(
+        "--release_steps",
+        type=int,
+        default=1000,
+        help="Number of steps to release the frozen base model",
+    )
+
+    tinyllm_parser.add_argument(
+        "--model_size",
+        type=str,
+        default="tiny",
+        help="Model size: nano, micro, tiny, small, medium, large, x-large, xx-large, 3x-large",
+        choices=[
+            "nano",
+            "micro",
+            "tiny",
+            "small",
+            "medium",
+            "large",
+            "x-large",
+            "xx-large",
+            "3x-large",
+        ],
+    )
+    tinyllm_parser.add_argument(
+        "--reduction",
+        type=str,
+        default="first",
+        help="Reduction method: mean, first, last",
+        choices=["mean", "first", "last"],
+    )
+    tinyllm_parser.add_argument(
+        "--no-causal",
+        action="store_true",
+        help="Do not use causal masking in the transformer",
+    )
+
+    tinyllm_parser.add_argument(
         "--tokenizer",
         type=str,
         default="movie-review",
         help="Tokenizer name",
     )
-    parser.add_argument(
+    tinyllm_parser.add_argument(
         "--vocab_size",
         type=int,
         default=5000,
         help="Tokenizer vocabulary size",
     )
 
-    parser.add_argument(
-        "--submit_file", type=str, default=None, help="Filename for submission"
+    transformers_parser.add_argument(
+        "--hf_model",
+        type=str,
+        default="siebert/sentiment-roberta-large-english",
+        help="HF model name when using transformers classifier",
     )
 
-    parser.add_argument(
-        "--wandb_project", type=str, default="UCAS ML 2025", help="Weights & Biases project name"
+    lstm_parser.add_argument(
+        "--hf_model",
+        type=str,
+        default="siebert/sentiment-roberta-large-english",
+        help="HF model name for tokenizer",
     )
-    parser.add_argument(
-        "--wandb_run_name", type=str, default=None, help="Weights & Biases run name"
+    lstm_parser.add_argument(
+        "--embedding_dim",
+        type=int,
+        default=128,
+        help="Embedding dimension for LSTM classifier",
+    )
+    lstm_parser.add_argument(
+        "--hidden_dim",
+        type=int,
+        default=256,
+        help="Hidden dimension for LSTM classifier",
+    )
+    lstm_parser.add_argument(
+        "--num_layers",
+        type=int,
+        default=2,
+        help="Number of LSTM layers for LSTM classifier",
+    )
+    lstm_parser.add_argument(
+        "--dropout",
+        type=float,
+        default=0.3,
+        help="Dropout rate for LSTM classifier",
+    )
+    lstm_parser.add_argument(
+        "--reduction",
+        type=str,
+        default="last",
+        help="Reduction method: mean, first, last",
+        choices=["mean", "first", "last"],
     )
 
     args = parser.parse_args()
@@ -134,9 +188,7 @@ def main():
     args = parse_args()
 
     # %%
-    use_tinyllm = args.classifier == "tinyllm"
-
-    if use_tinyllm:
+    if args.classifier == "tinyllm":
         if args.reduction in ("first", "mean"):
             if not args.no_causal:
                 args.no_causal = True
@@ -149,13 +201,6 @@ def main():
         if args.freeze_base_model and args.base_model is None:
             logger.warning("Freezing base model is only compatible with a loaded base model, ignoring --freeze_base_model")
             args.freeze_base_model = False
-    else:
-        if args.base_model is not None:
-            logger.warning("--base_model is only supported for tinyllm classifier, ignoring")
-            args.base_model = None
-        if args.freeze_base_model:
-            logger.warning("--freeze_base_model is only supported for tinyllm classifier, ignoring")
-            args.freeze_base_model = False
 
     print(f"Parameters: {vars(args)}")
 
@@ -166,7 +211,7 @@ def main():
     tokenizer_dir = PROJECT_ROOT / "ckpts" / "tokenizer"
 
     # %%
-    if use_tinyllm:
+    if args.classifier == "tinyllm":
         tokenizer = TinyLLMTokenizer.from_dir(tokenizer_dir / f"{args.tokenizer}-{args.vocab_size}")
     else:
         tokenizer = TransformersTokenizer(args.hf_model)
@@ -198,7 +243,7 @@ def main():
 
     # %%
     num_classes = 5
-    if use_tinyllm:
+    if args.classifier == "tinyllm":
         spec = model_specs(args.model_size)
         spec["share_embeddings"] = False
         model: Classifier = TinyLLMClassifier(
@@ -210,6 +255,7 @@ def main():
             **spec,
         )
     else:
+        assert isinstance(tokenizer, TransformersTokenizer)
         pad_token = tokenizer.pad_token_id if tokenizer.pad_token_id is not None else tokenizer.eos_token_id
         print(f"Pad token ID: {pad_token}")
         model = TransformersClassifier(
@@ -217,9 +263,9 @@ def main():
             num_classes=num_classes,
             pad_token_id=pad_token,
         )
-    print("Model architecture:")
-    print(model)
-    if use_tinyllm and args.base_model is not None:
+
+    if args.classifier == "tinyllm" and args.base_model is not None:
+        assert isinstance(model, TinyLLMClassifier)
         print(f"Loading base model from {args.base_model}...")
         base_state_dict = torch_load(args.base_model, map_location="cpu")
         model.model.load_state_dict(base_state_dict, strict=False)
@@ -251,16 +297,15 @@ def main():
         output_dir=output_dir,
         epochs=args.epoch,
         warmup_ratio=args.lr_warmup_ratio,
-        freeze_base_model=args.freeze_base_model,
-        release_steps=args.release_steps,
+        freeze_base_model=args.classifier == "tinyllm" and args.freeze_base_model,
+        release_steps=args.classifier == "tinyllm" and args.release_steps,
         valid_interval=args.valid_interval,
         save_ckpt=args.save_ckpt,
         save_best_only=args.save_best_only,
         submit_file=args.submit_file,
-        use_tinyllm=use_tinyllm,
         device=args.device,
         wandb_project=args.wandb_project,
-        wandb_run_name=args.wandb_run_name
+        wandb_run_name=args.wandb_run_name,
     )
 
     trainer = Trainer(
