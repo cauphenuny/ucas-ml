@@ -283,8 +283,7 @@ def main():
     if args.classifier == "tinyllm" and args.base_model is not None:
         assert isinstance(model, TinyLLMClassifier)
         print(f"Loading base model from {args.base_model}...")
-        base_state_dict = torch_load(args.base_model, map_location="cpu")
-        model.model.load_state_dict(base_state_dict, strict=False)
+        model.load_base(args.base_model)
     model = model.to(args.device)
     criterion = cross_entropy
 

@@ -73,6 +73,10 @@ class TinyLLMClassifier(Classifier):
         x = self.classifier(x)
         return x
 
+    def load_base(self, path: str):
+        state_dict = torch.load(path, map_location="cpu")
+        self.model.load_state_dict(state_dict, strict=True)
+
     def freeze_base(self):
         for param in self.model.parameters():
             param.requires_grad = False
