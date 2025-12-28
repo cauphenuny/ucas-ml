@@ -297,24 +297,36 @@ def main():
     )
 
     total_steps = len(train_dataloader) * args.epoch
-    lr_scheduler_kwargs = dict(
-        optimizer=optimizer,
-        total_steps=total_steps,
-        warmup_ratio=args.lr_warmup_ratio,
-    )
+    lr_scheduler_kwargs = {
+        "optimizer": optimizer,
+        "total_steps": total_steps,
+        "warmup_ratio": args.lr_warmup_ratio,
+    }
     if args.lr_scheduler == "constant":
         lr_scheduler = ConstantLRScheduler(**lr_scheduler_kwargs)
     elif args.lr_scheduler == "cosine":
         lr_scheduler = CosineLRScheduler(**lr_scheduler_kwargs)
 
     # %%
+    after_step = None
+    if args.classifier == "tinyllm" and args.freeze_base_model:
+        assert isinstance(model, TinyLLMClassifier)
+        
+        model.freeze_base()
+        
+        def release_on_step(model: Classifier, step: int):
+            if step == args.release_steps:
+                assert isinstance(model, TinyLLMClassifier)
+                print("Releasing base model parameters...")
+                model.release_base()
+        
+        after_step = release_on_step
+
     training_args = TrainingArgs(
         num_classes=num_classes,
         output_dir=output_dir,
         epochs=args.epoch,
         warmup_ratio=args.lr_warmup_ratio,
-        freeze_base_model=args.classifier == "tinyllm" and args.freeze_base_model,
-        release_steps=args.classifier == "tinyllm" and args.release_steps,
         valid_interval=args.valid_interval,
         save_ckpt=args.save_ckpt,
         save_best_only=args.save_best_only,
@@ -322,6 +334,8 @@ def main():
         device=args.device,
         wandb_project=args.wandb_project,
         wandb_run_name=args.wandb_run_name,
+        after_step=after_step,
+        after_epoch=None,
     )
 
     trainer = Trainer(

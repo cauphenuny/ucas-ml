@@ -3,6 +3,7 @@ import pandas as pd
 from dataclasses import dataclass
 from pathlib import Path
 from tqdm import tqdm
+from typing import Callable
 from sklearn.metrics import classification_report, confusion_matrix
 from torch.utils.data import DataLoader
 from torch import save as torch_save
@@ -16,8 +17,6 @@ class TrainingArgs:
     output_dir: Path
     epochs: int
     warmup_ratio: float
-    freeze_base_model: bool
-    release_steps: int
     valid_interval: int
     save_ckpt: str | None
     save_best_only: bool
@@ -25,6 +24,8 @@ class TrainingArgs:
     device: str
     wandb_project: str
     wandb_run_name: str
+    after_step: Callable[[Classifier, int], None] | None = None
+    after_epoch: Callable[[Classifier, int], None] | None = None
 
 class Trainer:
     def __init__(
@@ -69,16 +70,6 @@ class Trainer:
             group["lr"] = base_lr * scale
         return None
 
-    def freeze(self):
-        assert isinstance(self.model, TinyLLMClassifier)
-        for param in self.model.model.parameters():
-            param.requires_grad = False
-
-    def release(self):
-        assert isinstance(self.model, TinyLLMClassifier)
-        for param in self.model.model.parameters():
-            param.requires_grad = True
-
     def validate(self):
         valid_loss = 0.0
         correct = 0
@@ -121,9 +112,6 @@ class Trainer:
         return valid_loss
 
     def train(self):
-        if self.args.freeze_base_model:
-            self.freeze()
-
         print(f"Training on device: {self.args.device}")
         print("Architecture: ")
         print(self.model)
@@ -147,19 +135,22 @@ class Trainer:
                     loss.backward()
                     self.optimizer.step()
                     self.global_step += 1
+                    
+                    if self.args.after_step is not None:
+                        self.args.after_step(self.model, self.global_step)
+                    
                     ema_loss = 0.98 * ema_loss + 0.02 * loss.item() if ema_loss != 0.0 else loss.item()
                     avg_lr = sum(group["lr"] for group in self.optimizer.param_groups) / len(self.optimizer.param_groups)
                     pbar.set_postfix({"loss": f"{ema_loss:.3f}", "lr": f"{avg_lr:.2e}"})
                     pbar.update(1)
-                    if self.global_step == self.args.release_steps and self.args.freeze_base_model:
-                        assert isinstance(self.model, TinyLLMClassifier)
-                        print("Releasing base model parameters...")
-                        self.release()
                     if self.args.wandb_run_name:
                         wandb.log({
                             "train/loss": loss.item(),
                             "train/lr": avg_lr,
                         }, step=self.global_step)
+            
+            if self.args.after_epoch is not None:
+                self.args.after_epoch(self.model, epoch)
 
         if self.args.save_ckpt is not None and not self.args.save_best_only:
             torch_save(self.model.state_dict(), self.args.output_dir / self.args.save_ckpt)

@@ -72,3 +72,11 @@ class TinyLLMClassifier(Classifier):
         x = self.reduction(x, len)
         x = self.classifier(x)
         return x
+
+    def freeze_base(self):
+        for param in self.model.parameters():
+            param.requires_grad = False
+
+    def release_base(self):
+        for param in self.model.parameters():
+            param.requires_grad = True
