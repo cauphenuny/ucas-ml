@@ -1,5 +1,6 @@
 import wandb
 import pandas as pd
+import torch
 from dataclasses import dataclass
 from pathlib import Path
 from tqdm import tqdm
@@ -24,8 +25,48 @@ class TrainingArgs:
     device: str
     wandb_project: str
     wandb_run_name: str
+    label_smoothing: float = 0.0
     after_step: Callable[[Classifier, int], None] | None = None
     after_epoch: Callable[[Classifier, int], None] | None = None
+
+def cross_entropy_with_label_smoothing(
+    base_criterion: Callable,
+    logits: torch.Tensor,
+    targets: torch.Tensor,
+    num_classes: int,
+    label_smoothing: float,
+) -> torch.Tensor:
+    """
+    Cross-entropy loss function with label smoothing.
+    
+    Args:
+        base_criterion: Base loss function.
+        logits: Model output logits, shape (batch_size, num_classes).
+        targets: Ground truth labels, shape (batch_size,).
+        num_classes: Number of classes.
+        label_smoothing: Label smoothing coefficient, range [0, 1).
+    
+    Returns:
+        Loss value.
+    """
+    if label_smoothing == 0.0:
+        return base_criterion(logits, targets)
+    
+    # Compute log probabilities
+    log_probs = torch.log_softmax(logits, dim=-1)
+    
+    # Create smoothed label distribution
+    # True class probability: 1 - label_smoothing
+    # Other classes probability: label_smoothing / (num_classes - 1)
+    smooth_targets = torch.zeros_like(log_probs)
+    smooth_targets.fill_(label_smoothing / (num_classes - 1))
+    smooth_targets.scatter_(1, targets.unsqueeze(1), 1.0 - label_smoothing)
+    
+    # Compute cross-entropy: -sum(smooth_targets * log_probs)
+    loss = -(smooth_targets * log_probs).sum(dim=-1).mean()
+    
+    return loss
+
 
 class Trainer:
     def __init__(
@@ -47,9 +88,17 @@ class Trainer:
         self.valid_dataloader: DataLoader = valid_dataloader
         self.test_df = test_df
         self.optimizer = optimizer
-        self.criterion = criterion
+        self.base_criterion = criterion
         self.lr_scheduler = lr_scheduler
         self.args = training_args
+
+        # Create loss function with label smoothing if enabled
+        if self.args.label_smoothing > 0.0:
+            self.criterion = lambda logits, labels: cross_entropy_with_label_smoothing(
+                self.base_criterion, logits, labels, self.args.num_classes, self.args.label_smoothing
+            )
+        else:
+            self.criterion = self.base_criterion
 
         self.best_valid_loss = float("inf")
         self.global_step = 0
@@ -82,7 +131,8 @@ class Trainer:
             lengths = batch["lengths"]
             labels = batch["labels"]
             logits = self.model(input_ids, lengths)
-            loss = self.criterion(logits, labels)
+            # Use base criterion for validation (without label smoothing)
+            loss = self.base_criterion(logits, labels)
             valid_loss += loss.item()
             predict = logits.argmax(dim=-1)
             correct += (predict == labels).sum().item()

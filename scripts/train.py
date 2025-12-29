@@ -55,6 +55,13 @@ def parse_args():
     )
 
     parser.add_argument(
+        "--label_smoothing",
+        type=float,
+        default=0.0,
+        help="Label smoothing coefficient (0.0 to 1.0)",
+    )
+
+    parser.add_argument(
         "--submit_file", type=str, default=None, help="Filename for submission"
     )
 
@@ -191,6 +198,11 @@ def parse_args():
 def main():
     # %%
     args = parse_args()
+
+    # %%
+    # Validate label_smoothing parameter range
+    if args.label_smoothing < 0.0 or args.label_smoothing >= 1.0:
+        raise ValueError(f"label_smoothing must be in [0.0, 1.0), got {args.label_smoothing}")
 
     # %%
     if args.classifier == "tinyllm":
@@ -333,6 +345,7 @@ def main():
         device=args.device,
         wandb_project=args.wandb_project,
         wandb_run_name=args.wandb_run_name,
+        label_smoothing=args.label_smoothing,
         after_step=after_step,
         after_epoch=None,
     )
