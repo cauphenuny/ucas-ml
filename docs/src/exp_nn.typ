@@ -56,7 +56,7 @@
 
 === 两阶段训练
 
-为了充分发挥大模型的性能，可以采用两阶段训练方法：
+为了充分发挥大模型的性能，我们采用两阶段训练方法：
 
 先在通用文本上预训练，然后在本题数据集上微调
 
@@ -71,7 +71,7 @@
 
 测试一下 先冻结 base_model，只训练分类头，然后在中途解冻 的效果
 
-#figure(image("assets/exp/freeze.png", width: 50%))
+#figure(image("assets/exp/freeze.png", width: 50%), caption: "freeze")
 
 结果变差了，可能是由于模型自身有效训练时间变短了
 
@@ -79,7 +79,11 @@
 
 使用更大的模型，更久的预训练：
 
-#figure(image("assets/exp/x-large.png", width: 50%))
+#grid(columns: (1fr, 1fr))[
+#figure(image("assets/exp/pretrain-loss.png", width: 90%), caption: "预训练 Loss 曲线")
+][
+#figure(image("assets/exp/x-large.png", width: 90%), caption: "微调")
+]
 
 最终在 x-large 模型上达到了最高 $0.66$ 的验证集准确率，提交结果 (test acc: 0.67854)：
 
@@ -89,7 +93,7 @@
 
 == 微调 transformers 库提供的预训练模型
 
-#figure(image("assets/exp/tinyllm_vs_gpt2.png", width: 50%))
+#figure(image("assets/exp/tinyllm_vs_gpt2.png", width: 50%), caption: "tinyllm vs gpt2")
 
 在过拟合之前我们的tinyllm模型与 gpt2 不相上下，甚至正确率略好一些
 
