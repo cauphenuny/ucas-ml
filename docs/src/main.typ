@@ -4,9 +4,9 @@
 
 = 模型设计
 
-#include "model_nn.typ"
-
 #include "model_trad.typ"
+
+#include "model_nn.typ"
 
 = 实验过程
 
