@@ -303,6 +303,7 @@ class MultiheadSelfAttention(Module):
         causal: bool = True,
         rope_theta: float | None = None,
         rope_len: int | None = None,
+        dropout: float = 0.0,
         device: torch.device | str | None = None,
         dtype: torch.dtype | None = None,
     ):
@@ -315,6 +316,7 @@ class MultiheadSelfAttention(Module):
         self.v_proj = Linear(d_model, d_model, device=device, dtype=dtype)
         self.output_proj = Linear(d_model, d_model, device=device, dtype=dtype)
         self.rope = RoPE(rope_theta, self.head_dim, rope_len, device=device) if rope_theta and rope_len else None
+        self.dropout = dropout
 
     def forward(
         self,
@@ -363,7 +365,7 @@ class MultiheadSelfAttention(Module):
         else:
             mask = padding_mask
 
-        attn_output = functional.scaled_dot_product_attention(q, k, v, mask=mask)
+        attn_output = functional.scaled_dot_product_attention(q, k, v, mask=mask, drop=self.dropout)
         attn_output = einops.rearrange(
             attn_output,
             "... num_heads len dim -> ... len (num_heads dim)",

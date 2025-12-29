@@ -168,6 +168,13 @@ def parse_args():
         help="Tokenizer vocabulary size",
     )
 
+    tinyllm_parser.add_argument(
+        "--dropout",
+        type=float,
+        default=0.0,
+        help="Dropout rate for TinyLLM model",
+    )
+
     transformers_parser.add_argument(
         "--hf_model",
         type=str,
@@ -300,6 +307,7 @@ def main():
             num_classes=num_classes,
             causal=not args.no_causal,
             reduction=args.reduction,
+            dropout=args.dropout,
             **spec,
         )
     elif args.classifier == "lstm":

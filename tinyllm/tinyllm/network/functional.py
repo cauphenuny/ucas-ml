@@ -29,17 +29,26 @@ def softmax(x: Tensor, dim: int = -1):
     return x
 
 
+def dropout(x: Tensor, p: float = 0.0) -> Tensor:
+    if p <= 0.0 or not x.requires_grad:
+        return x
+    mask = (torch.rand_like(x) >= p).float()
+    return x * mask / (1.0 - p)
+
+
 def scaled_dot_product_attention(
     query: Float[Tensor, " ... len_q dim_k"],
     key: Float[Tensor, " ... len_k dim_k"],
     value: Float[Tensor, " ... len_k dim_v"],
     mask: Bool[Tensor, " ... len_q len_k"] | None = None,
+    drop: float = 0.0,
 ) -> Float[Tensor, " ... len_q dim_v"]:
     scores = einops.einsum(query, key, " ... len_q dim_k, ... len_k dim_k -> ... len_q len_k")
     scores = scores / key.shape[-1] ** 0.5
     if mask is not None:
         scores.masked_fill_(~mask, float("-inf"))
     attn_value = softmax(scores, dim=-1)
+    attn_value = dropout(attn_value, p=drop)
     return einops.einsum(attn_value, value, " ... len_q len_k, ... len_k dim_v -> ... len_q dim_v")
 
 

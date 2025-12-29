@@ -23,6 +23,7 @@ class TransformerBlock(Module):
         norm_location: Literal["pre", "post"] = "pre",
         ffn_activate: Literal["swiglu", "silu"] = "swiglu",
         causal: bool = True,
+        dropout: float = 0.0,
     ):
         super().__init__()
         self.ln1 = RMSNorm(d_model, device=device, dtype=dtype) if norm_type == "rms" else Identical()
@@ -34,6 +35,7 @@ class TransformerBlock(Module):
             device=device,
             dtype=dtype,
             causal=causal,
+            dropout=dropout,
         )
         self.ln2 = RMSNorm(d_model, device=device, dtype=dtype) if norm_type == "rms" else Identical()
         self.ffn = FeedForward(d_model, d_ff, activate=ffn_activate, device=device, dtype=dtype)
@@ -72,6 +74,7 @@ class TransformerModel(Module):
         norm_location: Literal["pre", "post"] = "pre",
         ffn_activate: Literal["swiglu", "silu"] = "swiglu",
         causal: bool = True,
+        dropout: float = 0.0,
     ):
         super().__init__()
 
@@ -91,6 +94,7 @@ class TransformerModel(Module):
                     norm_location=norm_location,
                     ffn_activate=ffn_activate,
                     causal=causal,
+                    dropout=dropout,
                 )
                 for _ in range(num_layers)
             ]

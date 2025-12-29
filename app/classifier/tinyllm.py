@@ -15,6 +15,7 @@ class TinyLLMClassifier(Classifier):
         num_layers: int,
         reduction: Literal["mean", "first", "last"] = "last",
         causal: bool = False,
+        dropout: float = 0.0,
         **model_args,
     ):
         super().__init__()
@@ -25,6 +26,7 @@ class TinyLLMClassifier(Classifier):
             num_heads=num_heads,
             num_layers=num_layers,
             causal=causal,
+            dropout=dropout,
             **model_args,
         )
         self.classifier = layers.Sequential(
