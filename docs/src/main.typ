@@ -8,6 +8,8 @@
 
 #include "model_nn.typ"
 
+#include "model_trainer.typ"
+
 = 实验过程
 
 #include "exp.typ"
