@@ -55,10 +55,32 @@ def parse_args():
     )
 
     parser.add_argument(
+        "--loss",
+        type=str,
+        default="cross_entropy",
+        choices=["cross_entropy", "focal_loss"],
+        help="Loss function type: cross_entropy or focal_loss",
+    )
+
+    parser.add_argument(
         "--label_smoothing",
         type=float,
         default=0.0,
-        help="Label smoothing coefficient (0.0 to 1.0)",
+        help="Label smoothing coefficient (0.0 to 1.0), only used with cross_entropy",
+    )
+
+    parser.add_argument(
+        "--focal_alpha",
+        type=float,
+        default=1.0,
+        help="Focal loss alpha parameter (balancing factor)",
+    )
+
+    parser.add_argument(
+        "--focal_gamma",
+        type=float,
+        default=2.0,
+        help="Focal loss gamma parameter (focusing parameter)",
     )
 
     parser.add_argument(
@@ -203,6 +225,15 @@ def main():
     # Validate label_smoothing parameter range
     if args.label_smoothing < 0.0 or args.label_smoothing >= 1.0:
         raise ValueError(f"label_smoothing must be in [0.0, 1.0), got {args.label_smoothing}")
+    
+    # Validate focal loss parameters
+    if args.loss == "focal_loss":
+        if args.focal_alpha <= 0.0:
+            raise ValueError(f"focal_alpha must be > 0.0, got {args.focal_alpha}")
+        if args.focal_gamma < 0.0:
+            raise ValueError(f"focal_gamma must be >= 0.0, got {args.focal_gamma}")
+        if args.label_smoothing > 0.0:
+            logger.warning("Label smoothing is typically not used with focal loss, ignoring --label_smoothing")
 
     # %%
     if args.classifier == "tinyllm":
@@ -345,7 +376,10 @@ def main():
         device=args.device,
         wandb_project=args.wandb_project,
         wandb_run_name=args.wandb_run_name,
+        loss_type=args.loss,
         label_smoothing=args.label_smoothing,
+        focal_alpha=args.focal_alpha,
+        focal_gamma=args.focal_gamma,
         after_step=after_step,
         after_epoch=None,
     )

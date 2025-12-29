@@ -25,9 +25,47 @@ class TrainingArgs:
     device: str
     wandb_project: str
     wandb_run_name: str
+    loss_type: str = "cross_entropy"
     label_smoothing: float = 0.0
+    focal_alpha: float = 1.0
+    focal_gamma: float = 2.0
     after_step: Callable[[Classifier, int], None] | None = None
     after_epoch: Callable[[Classifier, int], None] | None = None
+
+def focal_loss(
+    logits: torch.Tensor,
+    targets: torch.Tensor,
+    alpha: float = 1.0,
+    gamma: float = 2.0,
+) -> torch.Tensor:
+    """
+    Focal loss function for addressing class imbalance.
+    
+    FL(p_t) = -alpha * (1 - p_t)^gamma * log(p_t)
+    
+    Args:
+        logits: Model output logits, shape (batch_size, num_classes).
+        targets: Ground truth labels, shape (batch_size,).
+        alpha: Balancing factor, typically 1.0 or class weights.
+        gamma: Focusing parameter, higher values focus more on hard examples.
+    
+    Returns:
+        Loss value.
+    """
+    # Compute probabilities
+    probs = torch.softmax(logits, dim=-1)
+    
+    # Get probability of true class
+    p_t = probs.gather(1, targets.unsqueeze(1)).squeeze(1)
+    
+    # Compute log probabilities
+    log_p_t = torch.log_softmax(logits, dim=-1).gather(1, targets.unsqueeze(1)).squeeze(1)
+    
+    # Compute focal loss: -alpha * (1 - p_t)^gamma * log(p_t)
+    loss = -alpha * ((1 - p_t) ** gamma) * log_p_t
+    
+    return loss.mean()
+
 
 def cross_entropy_with_label_smoothing(
     base_criterion: Callable,
@@ -88,12 +126,19 @@ class Trainer:
         self.valid_dataloader: DataLoader = valid_dataloader
         self.test_df = test_df
         self.optimizer = optimizer
-        self.base_criterion = criterion
         self.lr_scheduler = lr_scheduler
         self.args = training_args
 
-        # Create loss function with label smoothing if enabled
-        if self.args.label_smoothing > 0.0:
+        # Create base loss function based on loss_type
+        if self.args.loss_type == "focal_loss":
+            self.base_criterion = lambda logits, labels: focal_loss(
+                logits, labels, self.args.focal_alpha, self.args.focal_gamma
+            )
+        else:  # cross_entropy
+            self.base_criterion = criterion
+
+        # Apply label smoothing if enabled (only for cross_entropy)
+        if self.args.label_smoothing > 0.0 and self.args.loss_type == "cross_entropy":
             self.criterion = lambda logits, labels: cross_entropy_with_label_smoothing(
                 self.base_criterion, logits, labels, self.args.num_classes, self.args.label_smoothing
             )
