@@ -183,6 +183,8 @@ def forward(self, x, len=None):
 - 冻结/解冻（TinyLLM）：可加载 base ckpt 后冻结底座，`release_steps` 自动解冻，兼顾稳定性与收敛速度。
 - 验证与选优：每 `valid_interval` step 触发 `validate`，输出 loss/acc/分类报告/混淆矩阵，新低则保存 best（若开启）。
 
+---
+
 === 训练-验证-测试流程
 
 - 构建 DataLoader → 选择 tokenizer & 模型 → 创建优化器/调度器/损失。
