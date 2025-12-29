@@ -19,7 +19,7 @@
   lang: "zh",
   doc,
 ) = {
-  set text(font: ("Libertinus Serif", "Songti SC"), lang: lang)
+  set text(font: ("Libertinus Serif", "SimSun", "Songti SC"), lang: lang)
   show emph: text.with(font: ("Libertinus Serif", "STKaiti"))
   show: thmrules
   show: codly-init.with()
