@@ -1,45 +1,33 @@
-== Traditional ML
-
-=== TF-IDF
-
-#import "@preview/cmarker:0.1.8"
-#import "@preview/tablem:0.3.0": tablem
-#import "@preview/mitex:0.2.6": mi, mitex
-
-#grid(
-  columns: (5fr, 3fr)
-)[
-  
-  1. 计算词频，衡量某个词在文档中的重要性
-  
-  $
-    "TF"(t,d)= (f_(t,d))/(sum_(t' in d) f_(t',d))
-  $
-  
-  2. 计算逆文档频率，惩罚常见词，提升稀有词权重
-  
-  $
-    "IDF"(t)= log(N/(1 + "DF"(t)))
-  $
-  
-  3. 计算TF-IDF向量
-  
-  $
-    "TF-IDF"(t,d)= "TF"(t,d) times "IDF"(t)
-  $
-
-][
-  #figure(image("assets/TF_IDF.webp", width: 15em), caption: "tf_idf")
-]
-
----
+== 传统ML方法
 
 === Logistic Regression
 
+将TF-IDF处理后的文本通过逻辑回归 (Logistic Regression, LR) 进行分类。
 
+用于多分类的 LR:
 
+对于每一个类别 $k$ ，计算一个得分
 
-根据上述公式，我们设计实现了TF-IDF+Logistic Regression的传统机器学习模型,来进行情感分类任务。此外，我们还设计了与深度学习模型一致的接口，方便后续集成使用。
+$
+  z_k=w_k^(tack.b)x+b_k
+$
+
+类别 $k$ 的预测概率为：
+
+$
+  P(y=k|x)= (exp(z_k))/(sum_(j=1)^K exp(z_j)) quad "i.e. " "Softmax"(z_k)
+$
+
+（这也是为什么多分类LR又叫 Softmax Regression）
+
+损失函数 (Cross Entropy Loss)：
+
+$
+  -sum_(i=1)^m sum_(k=1)^K y_k^((i)) log(P(y=k|x^((i))))
+$
+
+/*
+
 ---
 
 === 集成：加权融合
@@ -64,3 +52,5 @@
   ```
 
 ]
+
+*/
