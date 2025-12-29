@@ -2,7 +2,7 @@
 
 #include "preprocess.typ"
 
-= 模型设计
+= 模型设计与实现
 
 #include "model_trad.typ"
 
