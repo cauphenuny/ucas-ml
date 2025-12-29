@@ -4,7 +4,7 @@
 #import "@preview/numbly:0.1.0": *
 #import "@preview/codly:1.3.0": *
 #import "@preview/codly-languages:0.1.10": *
-#set text(font: ("Libertinus Serif", "SimSun","Songti SC"), lang: "zh")
+#set text(font: ("Libertinus Serif", "Songti SC", "SimSun"), lang: "zh")
 #show emph: text.with(font: ("Libertinus Serif", "STKaiti"))
 
 #show: doc => {
