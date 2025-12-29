@@ -5,7 +5,7 @@
 
 #let wrong(content) = text(fill: red, $cancel(#content)$)
 
-== Neural Network
+== 深度神经网络
 
 === LSTM
 
@@ -30,7 +30,7 @@
 
 Multilayer LSTM:
 
-每个时间步在 $l − 1$ 层的 输出作为该位置在 $l$ 层的 输入
+每个时间步在 $l - 1$ 层的 输出作为该位置在 $l$ 层的 输入
 
 ---
 
@@ -194,45 +194,47 @@ $
 *Attention 和 RoPE 的实现：*
 
 #grid(columns: (1fr, 1.5fr), gutter: 1em)[
-  ```python
-  def scaled_dot_product_attention(
-      query: Float[Tensor, " ... len_q dim_k"],
-      key: Float[Tensor, " ... len_k dim_k"],
-      value: Float[Tensor, " ... len_k dim_v"],
-      mask: Bool[Tensor, " ... len_q len_k"] | None = None,
-  ) -> Float[Tensor, " ... len_q dim_v"]:
-      scores = einops.einsum(query, key, " ... len_q dim_k, ... len_k dim_k -> ... len_q len_k")
-      scores = scores / key.shape[-1] ** 0.5
-      if mask is not None:
-          scores.masked_fill_(~mask, float("-inf"))
-      attn_value = softmax(scores, dim=-1)
-      return einops.einsum(attn_value, value, " ... len_q len_k, ... len_k dim_v -> ... len_q dim_v")
-  ```
+  #figure(
+    ```python
+    def scaled_dot_product_attention(
+        query: Float[Tensor, " ... len_q dim_k"],
+        key: Float[Tensor, " ... len_k dim_k"],
+        value: Float[Tensor, " ... len_k dim_v"],
+        mask: Bool[Tensor, " ... len_q len_k"] | None = None,
+    ) -> Float[Tensor, " ... len_q dim_v"]:
+        scores = einops.einsum(query, key, " ... len_q dim_k, ... len_k dim_k -> ... len_q len_k")
+        scores = scores / key.shape[-1] ** 0.5
+        if mask is not None:
+            scores.masked_fill_(~mask, float("-inf"))
+        attn_value = softmax(scores, dim=-1)
+        return einops.einsum(attn_value, value, " ... len_q len_k, ... len_k dim_v -> ... len_q dim_v")
+    ```,
+    caption: [Attention, 位置：`tinyllm/tinyllm/network/functional.py`],
+  )
 ][
-  ```python
-  class RoPE(nn.Module):
-      def _update_rotation(self, max_seq_len: int):
-          positions = torch.arange(max_seq_len, dtype=torch.float32)
-          angles = einops.einsum(positions, self.freqs, "max_seq_len, half_d_k -> max_seq_len half_d_k")
-          """
-          [   cos     -sin    ] @ [x] = [cos x - sin y]
-          [   sin     cos     ]   [y]   [sin x + cos y]
-          """
-          rotate_x = torch.stack([torch.cos(angles), torch.sin(angles)], dim=-1).flatten(start_dim=-2)
-          rotate_y = torch.stack([-torch.sin(angles), torch.cos(angles)], dim=-1).flatten(start_dim=-2)
-          if self.device:
-              rotate_x = rotate_x.to(self.device)
-              rotate_y = rotate_y.to(self.device)
-          self.register_buffer("rotate_x", rotate_x, persistent=False)
-          self.register_buffer("rotate_y", rotate_y, persistent=False)
-          self.max_seq_len = max_seq_len
-  ```
+  #figure(
+    ```python
+    class RoPE(nn.Module):
+        def _update_rotation(self, max_seq_len: int):
+            positions = torch.arange(max_seq_len, dtype=torch.float32)
+            angles = einops.einsum(positions, self.freqs, "max_seq_len, half_d_k -> max_seq_len half_d_k")
+            rotate_x = torch.stack([torch.cos(angles), torch.sin(angles)], dim=-1).flatten(start_dim=-2)
+            rotate_y = torch.stack([-torch.sin(angles), torch.cos(angles)], dim=-1).flatten(start_dim=-2)
+            if self.device:
+                rotate_x = rotate_x.to(self.device)
+                rotate_y = rotate_y.to(self.device)
+            self.register_buffer("rotate_x", rotate_x, persistent=False)
+            self.register_buffer("rotate_y", rotate_y, persistent=False)
+            self.max_seq_len = max_seq_len
+    ```,
+    caption: [RoPE, 位置：`tinyllm/tinyllm/network/layers.py`],
+  )
 ]
 
 #[
   #show raw.where(block: true): text.with(size: 0.9em)
   #text(size: 1em)[
-    *Transformer Block 实现：*
+    *Transformer Block 实现：* (`tinyllm/tinyllm/network/models.py`)
     ```python
     class TransformerBlock(Module):
         def __init__(
@@ -274,7 +276,7 @@ $
             return x
     ```
     
-    *BPE Tokenizer 实现：*
+    *BPE Tokenizer 实现：* (`tinyllm/tinyllm/cpp/bpe.hpp`)
     ```cpp
     inline auto
     encode(const py::list& words, const py::list& merges, const py::dict& vocab, int num_threads, bool verbose = false)
@@ -338,15 +340,12 @@ $
 
 此外，我们尝试了使用 transformer 库微调模型，作为对比
 
+#figure(
 ```python
 class TransformersClassifier(Classifier):
     def __init__(self, model_name, num_classes, **kwargs):
         super().__init__()
-        self.model = AutoModelForSequenceClassification.from_pretrained(
-            model_name,
-            num_labels=num_classes,
-            **kwargs,
-        )
+        self.model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=num_classes, **kwargs)
         
     def forward(self, x, len):
         if len is not None:
@@ -357,4 +356,6 @@ class TransformersClassifier(Classifier):
 
         outputs = self.model(input_ids=x, attention_mask=attention_mask)
         return outputs.logits
-```
+```,
+caption: `app/classifier/transformers.py`
+)

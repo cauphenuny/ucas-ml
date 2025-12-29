@@ -2,7 +2,7 @@
 
 == LSTM 模型
 
-#image("assets/lstm-result.png")
+#figure(image("assets/lstm-result.png", width: 80%))
 
 最终 Accuracy 在 $0.58$ 左右
 

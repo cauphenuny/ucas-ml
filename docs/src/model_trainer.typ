@@ -3,7 +3,8 @@
 #grid(
   columns: (0.75fr, 1fr),
 )[
-== 模型设计与实现
+== 训练 pipeline
+
 === 整体架构概览
 - 入口：`scripts/train.py` 负责参数解析、数据加载、模型选择、优化器/调度器/损失构建，随后交给 `Trainer` 统一训练与评估。
 - 数据处理：`app/dataloader` 将 TSV 文本转为张量，完成分割、填充、对齐。
@@ -23,7 +24,7 @@
 - 数据集：Kaggle Sentiment Analysis on Movie Reviews
   - `data/train.tsv` 含 PhraseId/SentenceId/Phrase/Sentiment
   - `data/test.tsv` 仅含文本
-- 标签策略：按 SentenceId 取最长短语作为该句标签，确保划分时标签一致。
+- 标签策略：按 SentenceId 取最长短语作为该句标签，确保划分时标签一致，不让同一个句子不同短语同时出现在训练/验证集。
 - 划分：8:2 训练/验证，SentenceId 分层抽样。
 
 #figure(caption: `app/dataloader/dataset.py`)[
@@ -59,8 +60,8 @@ train_dataloader = DataLoader(train, batch_size=args.batch_size, shuffle=True,
 ---
 === Tokenizer
 
-- TinyLLM 路线：从 `ckpts/tokenizer/`_`<name>-<vocab_size>`_ 自训 BPE，序列长度 256。
-- HuggingFace 路线（Transformers/LSTM）：`TransformersTokenizer`，自动处理 pad/eos。
+- TinyLLM 模型使用的tokenizer：从 `ckpts/tokenizer/`_`<name>-<vocab_size>`_ 导入自训 BPE。
+- HuggingFace 使用的 tokenizer（Transformers/LSTM）：`TransformersTokenizer`，自动处理 pad/eos。
 
 `app/dataloader/transform.py` 中包含两个用于统一数据格式的函数：
 - 张量化：`to_tensor` 将文本编码为 `input_ids`
@@ -96,7 +97,7 @@ def collate_padding(device: torch.device | str | None = ACCL_DEVICE):
 ---
 === 模型后端与接口
 
-- 统一接口：`Classifier` 提供 `forward` 与 `predict`，`predict` 会负责 tokenizer 编码、padding 以及 argmax logits，确保三种后端一致的推理路径。
+- 统一接口：`Classifier` 提供 `forward` 与 `predict`，`forward`由具体的子类实现，`predict` 会负责 tokenizer 编码、padding 以及 argmax logits，确保三种后端一致的推理路径。
 
 #figure(caption: `app/classifier/base.py`)[
 ```python
@@ -115,7 +116,7 @@ class Classifier(torch.nn.Module, ABC):
 ]
 
 ---
-- TransformersClassifier：HF `AutoModelForSequenceClassification`，根据长度生成 attention mask，直接复用预训练语义。
+- TransformersClassifier：HF `AutoModelForSequenceClassification`，根据长度生成 attention mask
 
 #figure(caption: `app/classifier/transformers.py`)[
 ```python
@@ -141,7 +142,7 @@ class TransformersClassifier(Classifier):
 
 ---
 
-- LSTMClassifier：Embedding + (Bi)LSTM，支持 `first/mean/last` 聚合后接 MLP，变长序列采用 pack/pad 提升效率。
+- LSTMClassifier：Embedding + (Bi)LSTM，支持 `first/mean/last` 聚合后接 MLP
 
 #figure(caption: `app/classifier/lstm.py`)[
 ```python
@@ -170,7 +171,7 @@ def forward(self, x, len=None):
 - 选择后端模型：`--classifier {transformers,lstm,tinyllm}`
 - 设置超参：`--epoch/--batch_size/--lr/--valid_interval/--output_dir`……
 - 支持 checkpoint I/O 与 W&B。
-- 优化器：tinyllm AdamW（`betas=(0.9,0.999)`, `eps=1e-8`, `weight_decay=0.01`）。
+- 优化器：TinyLLM 实现的 AdamW（`betas=(0.9,0.999)`, `eps=1e-8`, `weight_decay=0.01`）。
 - 学习率：`constant` 或 `cosine` 调度，`warmup_ratio` 线性预热；若提供外部调度器，则 `_apply_warmup` 直接调用其 update。
 - 损失：`cross_entropy`；若启用 `label_smoothing`，仅训练期套平滑，验证阶段始终使用原始损失函数。
 
@@ -186,10 +187,10 @@ def forward(self, x, len=None):
 
 - 构建 DataLoader → 选择 tokenizer & 模型 → 创建优化器/调度器/损失。
 - 训练循环（`Trainer.train`）：
-  1. 周期性验证；
+  1. 如果达到 valid_step，则运行验证 `validate()`；
   2. 预热/调度 lr；
   3. 前向→loss→backward→step；
   4. 可选 step hook（如 TinyLLM 解冻）；
   5. W&B 日志。
 - 验证：`Trainer.validate` 评估 loss/acc/分类报告/混淆矩阵，更新 best。
-- 测试/提交：若提供 `--submit_file`，批量调用 `model.predict` 生成 CSV 提交文件。
+- 测试/提交：若提供 `--submit_file`，调用 `model.predict` 生成 CSV 提交文件。
