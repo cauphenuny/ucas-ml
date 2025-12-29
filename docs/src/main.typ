@@ -17,3 +17,7 @@
 = 分析与总结
 
 #include "analysis.typ"
+
+= 参考文献
+
+#include "bib.typ"

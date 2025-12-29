@@ -103,24 +103,28 @@
 
 在微调大规模预训练 Transformers 模型时，学习率（Learning Rate）的设置不仅影响收敛速度，更决定了训练的成败。本实验针对 `RoBERTa-Large` 模型进行了详尽的超参数搜索。
 
-==== 学习率过大导致的“类别塌陷”（Category Collapse）
+==== 学习率过大导致的类别塌陷
 
 
 #figure(image("assets/exp/lr/roberta.png", width: 50%), caption: "不同学习率结果")<demo-lr>
-实验初期，我们尝试使用较高的学习率 $lr = 1 × 10^(-4)$。结果模型在约 1000 个 iteration 后准确率骤降并陷入平台期（约 0.51 左右，对应数据集中占比较大的单一类别）。
+实验初期，我们尝试使用较高的学习率 $lr = 1 × 10^(-4)$。结果模型在约 1000 个 iteration 后，预测结果开始集中于类别 2，准确率降至 0.51 左右（等于类别 2 的占比），此后也一直保持在这一水平。
 
 #figure(image("assets/exp/lr/collapse.png", width: 50%), caption: "类别塌陷")
 
-这种现象被称为类别塌陷或模型退化。原因在于：
-1. `RoBERTa` 拥有 $125"M" ~ 3.5 "B"$ 参数，其预训练权重已处于高度优化的极小值区域。过大的更新步长会产生“灾难性遗忘”（Catastrophic Forgetting），破坏模型已掌握的语义提取能力。
+原因在于：
+1. `RoBERTa` 拥有 $125"M" ~ 3.5 "B"$ 参数，其预训练权重已处于高度优化的极小值区域。过大的更新步长会产生灾难性遗忘，破坏模型已掌握的语义提取能力。
 2. 由于随机初始化的分类头在初期会产生巨大的梯度，配合高学习率，这股冲击力会直接传导至底层权重，导致模型为了快速降低 Loss 而选择“全输出单一高频标签”的局部最优解。
-3. 值得注意的是（见 @demo-lr） $5 × 10^(-5)$ 这一在 Base 模型上常用的学习率，在训练后期（约 5000 step 后）也出现了准确率急剧下滑的崩溃现象，进一步证明了 Large 模型对高学习率的容忍度极低。
+3. 值得注意的是（见@demo-lr） $5 × 10^(-5)$ 这一在 Base 模型上常用的学习率，在训练后期（约 5000 step 后）也出现了准确率急剧下滑的崩溃现象，进一步证明了 Large 模型对高学习率的容忍度极低。
 
 ---
 
-RoBERTa 的原作者在论文中给出了他们的超参数设置：
+RoBERTa 和 BERT 的论文中都给出了研究者使用的超参数设置。
 
-#figure(image("assets/exp/lr/roberta-essay.png", width: 50%), caption: "RoBERTa 原论文超参数设置")
+#grid(columns: (1fr, 1fr))[
+#figure(image("assets/exp/lr/roberta-essay.png", width: 100%), caption: "RoBERTa 论文给出的超参数设置")
+][
+#figure(image("assets/exp/lr/bert-essay.png", width: 60%), caption: "BERT 论文给出的超参数设置建议")
+]
 
 ---
 
