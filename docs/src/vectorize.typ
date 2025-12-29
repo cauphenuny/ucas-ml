@@ -10,7 +10,7 @@
   columns: (5fr, 3fr),
   align: horizon,
 )[
-  === 词干提取 + TF-IDF
+  === TF-IDF
   
   首先提取单词，然后去掉文本中的停用词 (Stop Words)，然后对剩余词语进行 ngram 计数，取出频率最高的一些 unigram 和 bigram 作为 _词_
   
@@ -37,7 +37,7 @@
   *问题?* 不含有位置信息、词表大小与未登录词之间存在两难问题
 
 ][
-  #figure(image("assets/TF_IDF.webp", width: 15em), caption: "tf_idf")
+  #figure(image("assets/TF_IDF.webp", width: 15em), caption: "TF-IDF")
 ]
 
 ---
