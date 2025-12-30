@@ -2,6 +2,38 @@
 
 == 训练集数据分析
 
+=== 数据集格式
+
+#grid(columns: (1fr, 1fr), align: bottom)[
+数据集：#link("https://www.kaggle.com/competitions/sentiment-analysis-on-movie-reviews/overview", "Kaggle Sentiment Analysis on Movie Reviews")
+- `train.tsv` 含 PhraseId/SentenceId/Phrase/Sentiment
+  - Sentiment：影评的情感倾向（0\~4，负面\~正面）
+- `test.tsv` 类似，但不含 Sentiment
+][
+- 源自 Stanford Sentiment Treebank (SST) 的研究
+- 每个句子的所有解析子集都对应一个标签
+- 细粒度情感分析
+]
+
+#grid(columns: (1fr, 1fr), align: center)[
+  #figure(caption: "训练集数据片段")[
+  #tablem[
+  | PhraseId | SentenceId | Phrase | Sentiment |
+  | --- | --- | --- | --- |
+  | 83635 | 4323 | An exhilarating serving of movie fluff . | 2 |
+  | 83636 | 4323 | An exhilarating serving of movie fluff | 3 |
+  | 83637 | 4323 | An exhilarating | 3 |
+  | 83638 | 4323 | serving of movie fluff | 2 |
+  | 83639 | 4323 | of movie fluff | 1 |
+  | 83640 | 4323 | movie fluff | 2 |
+  ]]
+][
+  #figure(caption: "Stanford Sentiment Treebank")[#image("./assets/sst.png", width: 90%)]
+]
+
+
+---
+
 === 缺失与异常值处理
 
 经检查，不存在缺失/异常值

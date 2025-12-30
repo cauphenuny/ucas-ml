@@ -15,15 +15,12 @@
 
 - 训练循环：`Trainer` 实现学习率调度、标签平滑、定期验证、W&B 记录、最优权重保存与提交文件生成。
 ][
-  #figure(image("assets/trainer.png", width: 30em), caption: "Architecture")
+  #figure(image("assets/trainer.png", width: 30em), caption: "训练 pipeline 架构")
 ]
 
 ---
-=== 数据与预处理
+=== 数据预处理
 
-- 数据集：Kaggle Sentiment Analysis on Movie Reviews
-  - `data/train.tsv` 含 PhraseId/SentenceId/Phrase/Sentiment
-  - `data/test.tsv` 仅含文本
 - 标签策略：按 SentenceId 取最长短语作为该句标签，确保划分时标签一致，不让同一个句子不同短语同时出现在训练/验证集。
 - 划分：8:2 训练/验证，SentenceId 分层抽样。
 
@@ -45,15 +42,28 @@ def split(self, test_size: float = 0.2, random_state: int | None = None):
 ```
 ]
 
-- 数据加载：入口脚本构建 Dataset → split → DataLoader（train 打乱，collate 负责 padding 与长度）。
+- 数据加载：入口脚本构建 Dataset → split → DataLoader（train 数据集打乱；`collate_fn` 负责 padding 与长度）。
 
 #figure(caption: `scripts/train.py`)[
 ```python
-dataset = dataloader.Dataset(pd.read_csv(train_path, sep="\t"),
-    transform=dataloader.transform.to_tensor(tokenizer, device=args.device))
-train, valid = dataset.split(test_size=0.2, random_state=42)
-train_dataloader = DataLoader(train, batch_size=args.batch_size, shuffle=True,
-    collate_fn=dataloader.transform.collate_padding(device=args.device))
+    dataset = dataloader.Dataset(
+        pd.read_csv(train_path, sep="\t"),
+        transform=dataloader.transform.to_tensor(tokenizer, device=args.device),
+    )
+    train, valid = dataset.split(test_size=0.2, random_state=42)
+    train_dataloader = DataLoader(
+        train,
+        batch_size=args.batch_size,
+        shuffle=True,
+        collate_fn=dataloader.transform.collate_padding(device=args.device),
+    )
+    valid_dataloader = DataLoader(
+        valid,
+        batch_size=args.batch_size,
+        shuffle=False,
+        collate_fn=dataloader.transform.collate_padding(device=args.device),
+    )
+    test = pd.read_csv(test_path, sep="\t", dtype=str, na_filter=False)
 ```
 ]
 
