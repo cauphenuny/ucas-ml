@@ -1,4 +1,5 @@
-#import "@preview/tablem:0.3.0": tablem
+#import "@preview/tablem:0.3.0": tablem, three-line-table
+#import "@preview/oxifmt:1.0.0": strfmt
 
 == LSTM 模型
 
@@ -29,20 +30,24 @@ LSTMClassifier(
 
 === 直接训练
 
+#let improve(content) = text(olive)[(#content)]
+#let rel-improve(res, base) = improve(strfmt("+{:.1}%", (res - base) / base * 100))
+
 我们首先尝试直接在本题数据集上从头开始训练一个 Transformer 模型
 
 1. 模型大小实验
 
 #grid(columns: (1fr, 1fr))[
   （参数）：
-  #tablem[
-    | 模型大小 | `num_layers` | `d_model` | `num_heads` |
-    | --- | --- | --- | --- |
-    | tiny | 4 | 256 | 8 |
-    | small | 4 | 512 | 16 |
-    | medium | 8 | 512 | 16 |
-    | large | 12 | 768 | 16 |
-    | x-large | 16 | 1024 | 16 |
+  #let data = ()
+  #three-line-table[
+    | 模型大小 | `num_layers` | `d_model` | `num_heads` | `val.acc` |
+    | --- | --- | --- | --- | --- |
+    | tiny | 4 | 256 | 8 | 0.558 |
+    | small | 4 | 512 | 16 | 0.567 #rel-improve(0.567, 0.558) |
+    | medium | 8 | 512 | 16 | 0.567 #rel-improve(0.567, 0.558) |
+    | large | 12 | 768 | 16 | N/A |
+    | x-large | 16 | 1024 | 16 | N/A |
   ]
 ][
   #image("assets/exp/size/size.png")
@@ -58,6 +63,14 @@ LSTMClassifier(
 
   - last: 选择最后一个token的特征接到分类头
   - mean: 选择所有token的特征的平均值接到分类头
+
+  #three-line-table[
+    | 模型大小 | reduction: last | reduction: mean |
+    | --- | --- | --- |
+    | tiny | 0.558 | 0.571 #rel-improve(0.571, 0.558) |
+    | small | 0.567 | 0.580 #rel-improve(0.580, 0.567) |
+    | medium | 0.567 | 0.570 #rel-improve(0.570, 0.567) |
+  ]
 
   可以看到，mean 方法明显比 last方法好，但模型越大，规约方法的影响越小
 
@@ -85,8 +98,20 @@ LSTMClassifier(
 
 加入预训练阶段后，模型性能有明显提升，尽管预训练的任务和数据集都与本题不完全匹配
 
+#grid(
+  columns: (1fr, 1fr)
+)[
+  
+  #three-line-table[
+    | 模型大小 | baseline | +mean reduce | +pretrain |
+    | --- | --- | --- | --- |
+    | tiny | 0.558 | 0.571 #rel-improve(0.571, 0.558) | 0.588 #rel-improve(0.588, 0.558) |
+    | medium | 0.567 | 0.570 #rel-improve(0.570, 0.567) | 0.597 #rel-improve(0.597, 0.567) |
+  ]
 
-#figure(image("assets/exp/pretrain.png", width: 50%))
+][
+  #figure(image("assets/exp/pretrain.png", width: 100%))
+]
 
 ---
 
@@ -106,7 +131,7 @@ LSTMClassifier(
 #figure(image("assets/exp/x-large.png", width: 90%), caption: "微调")
 ]
 
-最终在 x-large 模型上达到了最高 $0.66$ 的验证集准确率，提交结果 (test acc: 0.67854, 排名：*8/861*)：
+最终在 x-large 模型上达到了最高 $0.66$ 的验证集准确率，提交结果 (test acc: 0.67854)：
 
 #image("assets/kaggle/tinyllm.png")
 
@@ -161,15 +186,15 @@ RoBERTa 和 BERT 的论文中都给出了研究者使用的超参数设置。
 
 通过对比实验，我们确定了适用于本任务的超参数空间：
 
-#tablem[
-| 学习率             | 调度策略      | 训练表现             | 验证集峰值精度 | 稳定性 |
-| ------------------ | ------------- | -------------------- | -------------- | ------ |
-| $1 × 10^(-4)$ | Warmup+Const  | 极速崩溃（1k step）  | 0.51           | 极差   |
-| $5 × 10^(-5)$ | Warmup+Const  | 中期崩溃（4k step）  | 0.64           | 不稳定 |
-| $2 × 10^(-5)$ | Warmup+Const  | 缓慢上升，略有震荡   | 0.67           | 良好   |
-| $2 × 10^(-5)$ | Warmup+Cosine | *平滑收敛，泛化最优* | *0.69*         | *极佳* |
-| $5 × 10^(-6)$ | Warmup+Cosine | 极其稳定但收敛缓慢   | 0.68           | 极佳   |
-| ]
+#three-line-table[
+  | 学习率             | 调度策略      | 训练表现             | 验证集峰值精度 | 稳定性 |
+  | ------------------ | ------------- | -------------------- | -------------- | ------ |
+  | $1 × 10^(-4)$ | Warmup+Const  | 极速崩溃（1k step）  | 0.51           | 极差   |
+  | $5 × 10^(-5)$ | Warmup+Const  | 中期崩溃（4k step）  | 0.64           | 不稳定 |
+  | $2 × 10^(-5)$ | Warmup+Const  | 缓慢上升，略有震荡   | 0.67           | 良好   |
+  | $2 × 10^(-5)$ | Warmup+Cosine | *平滑收敛，泛化最优* | *0.69*         | *极佳* |
+  | $5 × 10^(-6)$ | Warmup+Cosine | 极其稳定但收敛缓慢   | 0.68           | 极佳   |
+  | ]
 
 ---
 
@@ -180,6 +205,6 @@ RoBERTa 和 BERT 的论文中都给出了研究者使用的超参数设置。
   #image("assets/exp/lr/cosine-result.png", width: 80%)
 ]
 
-最终最好的结果 (test acc: 0.71186，*排名：3/861*)：
+最终最好的结果 (test acc: 0.71186)：
 
 #image("assets/kaggle/roberta.png")

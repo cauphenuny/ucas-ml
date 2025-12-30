@@ -9,7 +9,7 @@ make_pipeline(
 )
 ```
 
-结果：Test Accuracy $=0.62450$, Rank: 284/861，作为baseline
+结果：Test Accuracy $=0.62450$，作为baseline
 
 #image("assets/kaggle/traditional.png")
 

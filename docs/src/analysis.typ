@@ -1,4 +1,4 @@
-#import "@preview/tablem:0.3.0": tablem
+#import "@preview/tablem:0.3.0": tablem, three-line-table
 
 == 最终模型性能对比
 
@@ -7,7 +7,7 @@
 下表展示了四个模型在验证集上的最佳性能指标。可以看到，不同架构的模型在情感分析任务上表现出了显著差异。
 
 #figure(
-  tablem[
+  three-line-table[
     | 模型架构 | 架构类型 | Val Accuracy | Val Loss | Macro-F1 | 极端情感召回 (Class 0/4) |
     | :--- | :--- | :--- | :--- | :--- | :--- |
     | *LSTM* | RNN | 58.50% | 1.0592 | 0.41 | 极差 (~13% / 21%) |
@@ -48,14 +48,14 @@
 本任务最大的难点在于 *类别不平衡* (Neutral 占 50%)。我们重点关注模型对 *Very Negative (0)* 和 *Very Positive (4)* 的识别能力。
 
 #figure(
-  tablem[
+  three-line-table[
     | 真实标签 | LSTM Recall | TinyLLM Recall | GPT-2 Recall | RoBERTa Recall |
     | :--- | :--- | :--- | :--- | :--- |
     | 0 (极负) | 13% | 23% | 30% | 47% |
     | 1 (负面) | 40% | 52% | 57% | 61% |
     | 2 (中性) | 81% | 80% | 81% | 79% |
     | 3 (正面) | 40% | 57% | 55% | 62% |
-    | 4 (极正) | 21% | 36% | 45% | 57% | 
+    | 4 (极正) | 21% | 36% | 45% | 57% |
   ],
   caption: "各类别召回率 (Recall) 详细对比"
 )
@@ -99,3 +99,25 @@
 3. *预训练的重要性*：大规模预训练使模型携带的丰富先验知识是解决 *Cold Start* 和 *类别不平衡问题* 的关键。预训练使得模型能够更好地泛化到小样本场景。
 
 4. *Accuracy 区分度不足*：LSTM 的 58% Accuracy 背后是接近 0 的极端情感召回率；Transformer 模型的约 70% Accuracy 代表了更均衡、更可用的模型。
+
+---
+
+=== 最终提交结果
+
+#grid(columns: (1fr, 1.5fr), align: horizon)[
+  #three-line-table[
+    | 模型 | 提交结果 | 排名 |
+    | :--- | :--- | :--- |
+    | Logistic Regression| 0.62450 | 284 / 861 |
+    | 集成 (LR+RoBERTa) | 0.68507 | 6 / 861 |
+    | LSTM | 0.58886 | 508 / 861 |
+    | TinyLLM | *0.67854* | *8 / 861* |
+    | RoBERTa | *0.71186* | *3 / 861* |
+  ]
+][
+  #image("assets/kaggle/traditional.png", width: 100%)
+  #image("assets/kaggle/merge.png", width: 100%)
+  #image("assets/kaggle/lstm.png", width: 100%)
+  #image("assets/kaggle/tinyllm.png", width: 100%)
+  #image("assets/kaggle/roberta.png", width: 100%)
+]
