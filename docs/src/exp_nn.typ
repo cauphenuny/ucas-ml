@@ -131,6 +131,20 @@ LSTMClassifier(
 #figure(image("assets/exp/x-large.png", width: 90%), caption: "微调")
 ]
 
+---
+
+结果：
+
+#figure(
+  three-line-table[
+    | 模型大小 | Val Accuracy |
+    | --- | --- |
+    | tiny | 0.588 |
+    | medium | 0.597 #rel-improve(0.597, 0.588) |
+    | x-large | 0.660 #rel-improve(0.660, 0.588) |
+  ]
+)
+
 最终在 x-large 模型上达到了最高 $0.66$ 的验证集准确率，提交结果 (test acc: 0.67854)：
 
 #image("assets/kaggle/tinyllm.png")
