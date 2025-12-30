@@ -3,7 +3,7 @@
 == 训练集数据分析
 
 训练集情感分布是：
-#grid(columns: (1fr, 1fr))[
+#grid(columns: (1fr, 1fr), align: horizon)[
   #figure(
     tablem[
       | 情感标签 | 含义            | 样本数        | 占比（约）     |
@@ -16,7 +16,7 @@
     ],
     caption: "训练集情感分布统计",
   )][
-  //#figure(image("assets/data/sentiment_label_bar.png", width: 50%))
+  #figure(image("assets/dataset/dist.png", width: 70%))
 ]
 
 
@@ -24,6 +24,7 @@
   _这是一个以 Neutral 为主导、极端情感样本稀缺的严重不均衡多分类数据集。_
 ]
 
+---
 
 === 数据明显「类别不平衡」
 - Neutral（2）$approx$ *占一半*
