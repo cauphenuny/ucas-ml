@@ -14,9 +14,9 @@
 
 #include "exp.typ"
 
-= 分析与总结
+= 总结
 
-#include "analysis.typ"
+#include "summary.typ"
 
 = 参考文献
 

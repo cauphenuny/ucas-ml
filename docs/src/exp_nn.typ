@@ -2,7 +2,26 @@
 
 == LSTM 模型
 
-#figure(image("assets/lstm-result.png", width: 80%))
+我们训练了一个简单的 LSTM 模型：
+
+#grid(columns: (1fr, 2.5fr), gutter: 1em, align: horizon)[
+
+```python
+LSTMClassifier(
+    embedding_dim=128,
+    hidden_dim=128,
+    output_dim=5,
+    n_layers=2,
+    bidirectional=True,
+    dropout=0.3,
+)
+```
+
+][
+
+#figure(image("assets/lstm-result.png", width: 100%))
+
+]
 
 最终 Accuracy 在 $0.58$ 左右
 
@@ -10,7 +29,9 @@
 
 === 直接训练
 
-模型大小实验
+我们首先尝试直接在本题数据集上从头开始训练一个 Transformer 模型
+
+1. 模型大小实验
 
 #grid(columns: (1fr, 1fr))[
   （参数）：
@@ -33,7 +54,7 @@
 
 #grid(columns: (1.8fr, 1fr))[
 
-  规约方法方法实验：
+  2. 规约方法方法实验：
 
   - last: 选择最后一个token的特征接到分类头
   - mean: 选择所有token的特征的平均值接到分类头

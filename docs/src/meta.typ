@@ -10,6 +10,6 @@
   course: [机器学习导论],
   repo: [https://github.com/cauphenuny/ucas-ml],
   semester: [2025秋季学期],
-  date: datetime.today(),
+  date: datetime(year: 2025, month: 12, day: 29),
   institution: [University of Chinese Academy of Sciences],
 )
