@@ -15,7 +15,7 @@
 
 - 训练循环：`Trainer` 实现学习率调度、标签平滑、定期验证、W&B 记录、最优权重保存与提交文件生成。
 ][
-  #figure(image("assets/trainer.svg", width: 25em), caption: "Architecture")
+  #figure(image("assets/trainer.png", width: 30em), caption: "Architecture")
 ]
 
 ---
