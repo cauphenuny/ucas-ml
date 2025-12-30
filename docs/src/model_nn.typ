@@ -80,7 +80,7 @@ $
     "RMS"(x)=sqrt(1/d sum_(i=1)^d x_i^2 + epsilon) \
     "RMSNorm"(x)_i=x_i / "RMS"(x) dot gamma_i
   $
-  与 LayerNorm 相比，仅保留缩放，减少计算开销，收敛更快
+  与 LayerNorm 相比，仅保留缩放，减少计算开销，收敛更快 @RMSNorm
 ]
 
 #theorion.note-box(title: "SwiGLU: Swish Gated Linear Unit")[
@@ -88,7 +88,7 @@ $
     "SiLU"(x)= x dot sigma(x) \
     "SwiGLU"(x, W_1, W_2, W_3)= W_2 ("SiLU"(W_1 x)) dot.o W_3 x)
   $
-  通过门控机制，模型可以动态控制哪些信息应该通过，增加了非线性表达的自由度。
+  通过门控机制，模型可以动态控制哪些信息应该通过，增加了非线性表达的自由度。 @SiLU @GLU
 ]
 
 ---
@@ -97,7 +97,7 @@ $
   #theorion.quote-box[
     RoFormer: Enhanced Transformer with Rotary Position Embedding, Su et al., 2021
   ]
-  一种位置编码，核心思想是将特征向量看作是 2D 平面上的复数，并对其进行旋转，从而编码相对距离 $m-n$。
+  一种位置编码，核心思想是将特征向量看作是 2D 平面上的复数，并对其进行旋转，从而编码相对距离 $m-n$。@RoPE
   
   二维的旋转：
   $

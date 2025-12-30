@@ -60,7 +60,7 @@
 
 先在通用文本上预训练，然后在本题数据集上微调
 
-具体地，我们在 OpenWebText (24.2GB) / TinyStories (1GB) 数据集上训练 next-token prediction 任务
+具体地，我们在 OpenWebText (24.2GB) @owt / TinyStories (1GB) @tinystories 数据集上训练 next-token prediction 任务
 
 加入预训练阶段后，模型性能有明显提升，尽管预训练的任务和数据集都与本题不完全匹配
 
@@ -69,7 +69,7 @@
 
 ---
 
-测试一下 先冻结 base_model，只训练分类头，然后在中途解冻 的效果
+试验一下 先冻结 base_model，只训练分类头，然后在中途解冻 的效果
 
 #figure(image("assets/exp/freeze.png", width: 50%), caption: "freeze")
 
@@ -121,9 +121,9 @@
 RoBERTa 和 BERT 的论文中都给出了研究者使用的超参数设置。
 
 #grid(columns: (1fr, 1fr))[
-#figure(image("assets/exp/lr/roberta-essay.png", width: 100%), caption: "RoBERTa 论文给出的超参数设置")
+#figure(image("assets/exp/lr/roberta-essay.png", width: 100%), caption: [RoBERTa 论文给出的超参数设置 @roberta])
 ][
-#figure(image("assets/exp/lr/bert-essay.png", width: 60%), caption: "BERT 论文给出的超参数设置建议")
+#figure(image("assets/exp/lr/bert-essay.png", width: 60%), caption: [BERT 论文给出的超参数设置建议 @bert])
 ]
 
 ---
