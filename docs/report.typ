@@ -87,4 +87,7 @@
   subtitle: meta.subtitle,
 )
 
-#include "src/main.typ"
+#{
+  show "—": ""
+  include "src/main.typ"
+}
