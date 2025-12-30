@@ -45,27 +45,29 @@
     tablem[
       | 情感标签 | 含义            | 样本数        | 占比（约）     |
       | ---- | ------------- | ---------- | --------- |
-      | 0    | Very Negative | 7,072      | 4.5%      |
-      | 1    | Negative      | 27,273     | 17.4%     |
+      | 0    | Negative | 7,072      | 4.5%      |
+      | 1    | Somewhat Negative      | 27,273     | 17.4%     |
       | 2    | Neutral       | 79,582     | 50.8%     |
-      | 3    | Positive      | 32,927     | 21.0%     |
-      | 4    | Very Positive | 9,206      | 5.9%      |
+      | 3    | Somewhat Positive      | 32,927     | 21.0%     |
+      | 4    | Positive | 9,206      | 5.9%      |
     ],
     caption: "训练集情感分布统计",
   )][
-  #figure(image("assets/dataset/dist.png", width: 70%))
+  #figure(image("assets/dataset/dist.png", width: 70%), caption: "分布可视化")
 ]
 
 
+#align(center)[
 #block(fill: luma(240), inset: 8pt, radius: 4pt)[
   _这是一个以 Neutral 为主导、极端情感样本稀缺的严重不均衡多分类数据集。_
+]
 ]
 
 ---
 
 ==== 数据明显「类别不平衡」
 - Neutral（2）$approx$ *占一半*
-- Very Negative / Very Positive < *6%*
+- Negative / Positive < *6%*
 - 多数类样本 $approx$ 少数类样本的 *10 倍以上*
 
 #block(stroke: (left: 4pt + gray), inset: (left: 1em))[
@@ -88,7 +90,7 @@
 
 ==== 极端情感（0 / 4）是最难学的
 
-Very Negative + Very Positive =10.4%
+Negative + Positive =10.4%
 
 但它们在实际应用中最重要
 

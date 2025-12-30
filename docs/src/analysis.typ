@@ -45,7 +45,7 @@
 
 === 极端情感捕捉能力分析 (Recall Analysis)
 
-本任务最大的难点在于 *类别不平衡* (Neutral 占 50%)。我们重点关注模型对 *Very Negative (0)* 和 *Very Positive (4)* 的识别能力。
+本任务最大的难点在于 *类别不平衡* (Neutral 占 50%)。我们重点关注模型对 *Negative (0)* 和 *Positive (4)* 的识别能力。
 
 #figure(
   three-line-table[
@@ -104,7 +104,7 @@
 
 === 最终提交结果
 
-#grid(columns: (1fr, 1.5fr), align: horizon)[
+#grid(columns: (1fr, 1.5fr), gutter: 1em, align: horizon)[
   #three-line-table[
     | 模型 | 提交结果 | 排名 |
     | :--- | :--- | :--- |

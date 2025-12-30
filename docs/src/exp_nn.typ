@@ -41,11 +41,12 @@ LSTMClassifier(
   （参数）：
   #let data = ()
   #three-line-table[
-    | 模型大小 | `num_layers` | `d_model` | `num_heads` | `val.acc` |
+    | 大小 | `num_layers` | `d_model` | `num_heads` | val/acc |
     | --- | --- | --- | --- | --- |
-    | tiny | 4 | 256 | 8 | 0.558 |
-    | small | 4 | 512 | 16 | 0.567 #rel-improve(0.567, 0.558) |
-    | medium | 8 | 512 | 16 | 0.567 #rel-improve(0.567, 0.558) |
+    | micro | 4 | 128 | 4 | 0.551 |
+    | tiny | 4 | 256 | 8 | 0.558 #rel-improve(0.558, 0.551)|
+    | small | 4 | 512 | 16 | 0.567 #rel-improve(0.567, 0.551) |
+    | medium | 8 | 512 | 16 | 0.567 #rel-improve(0.567, 0.551) |
     | large | 12 | 768 | 16 | N/A |
     | x-large | 16 | 1024 | 16 | N/A |
   ]
@@ -99,7 +100,7 @@ LSTMClassifier(
 加入预训练阶段后，模型性能有明显提升，尽管预训练的任务和数据集都与本题不完全匹配
 
 #grid(
-  columns: (1fr, 1fr)
+  columns: (1.2fr, 1fr)
 )[
   
   #three-line-table[
@@ -137,7 +138,7 @@ LSTMClassifier(
 
 #figure(
   three-line-table[
-    | 模型大小 | Val Accuracy |
+    | 模型大小 | val/acc |
     | --- | --- |
     | tiny | 0.588 |
     | medium | 0.597 #rel-improve(0.597, 0.588) |
