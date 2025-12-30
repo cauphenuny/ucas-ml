@@ -106,7 +106,7 @@ LSTMClassifier(
 #figure(image("assets/exp/x-large.png", width: 90%), caption: "微调")
 ]
 
-最终在 x-large 模型上达到了最高 $0.66$ 的验证集准确率，提交结果 (test acc: 0.67854)：
+最终在 x-large 模型上达到了最高 $0.66$ 的验证集准确率，提交结果 (test acc: 0.67854, 排名：*8/861*)：
 
 #image("assets/kaggle/tinyllm.png")
 
@@ -180,6 +180,6 @@ RoBERTa 和 BERT 的论文中都给出了研究者使用的超参数设置。
   #image("assets/exp/lr/cosine-result.png", width: 80%)
 ]
 
-最终最好的结果 (test acc: 0.71186)：
+最终最好的结果 (test acc: 0.71186，*排名：3/861*)：
 
 #image("assets/kaggle/roberta.png")
