@@ -173,23 +173,12 @@ RoBERTa 和 BERT 的论文中都给出了研究者使用的超参数设置。
 
 ---
 
-#grid(columns: (1fr, 1.5fr), align: horizon)[
-  #figure(image("assets/exp/lr/constant.png", width: 100%))
-  #figure(image("assets/exp/lr/cosine.png", width: 100%))
+#grid(columns: (1fr, 1.5fr), align: horizon + center)[
+  #figure(image("assets/exp/lr/constant.png", width: 70%))
+  #figure(image("assets/exp/lr/cosine.png", width: 70%))
 ][
-  #image("assets/exp/lr/cosine-result.png", width: 100%)
+  #image("assets/exp/lr/cosine-result.png", width: 80%)
 ]
-
----
-
-
-// TODO:
-
-/*
-- *“退而求其次”原则*：在微调 `RoBERTa-Large` 或类似的已经过微调的模型（如 `siebert/sentiment-roberta-large-english`）时，$2 × 10^(-5)$ 是一个坚固的上限。若追求极致稳定，建议降低至 $1 × 10^(-5)$。
-- *调度器的复利效应*：Warmup 解决了“能不能跑通”的问题，而 Cosine Decay 解决了“能不能跑好”的问题。
-- *架构差异*：对于从零训练的 `TinyLLM`，学习率设定在 $2 × 10^(-3)$（比微调大 100 倍），这反映了模型在“寻找特征”与“微调特征”阶段对能量需求的本质不同。
-*/
 
 最终最好的结果 (test acc: 0.71186)：
 

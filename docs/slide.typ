@@ -28,6 +28,7 @@
   )
   show: text.with(size: 0.75em)
   show: codly-init.with()
+  show ref: r => text(blue, r)
   show raw.where(block: true): text.with(size: 0.8em)
   set heading(numbering: numbly("{1:一}、", default: "1.1  "))
 

@@ -18,6 +18,6 @@
 
 #include "analysis.typ"
 
-= 参考文献
+= 附录
 
-#include "bib.typ"
+#include "appendix.typ"
