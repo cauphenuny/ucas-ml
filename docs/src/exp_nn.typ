@@ -31,7 +31,9 @@ LSTMClassifier(
 === 直接训练
 
 #let improve(content) = text(olive)[(#content)]
+#let degrade(content) = text(red)[(#content)]
 #let rel-improve(res, base) = improve(strfmt("+{:.1}%", (res - base) / base * 100))
+#let rel-degrade(res, base) = degrade(strfmt("-{:.1}%", (base - res) / base * 100))
 
 我们首先尝试直接在本题数据集上从头开始训练一个 Transformer 模型
 
@@ -43,10 +45,11 @@ LSTMClassifier(
   #three-line-table[
     | 大小 | `num_layers` | `d_model` | `num_heads` | val/acc |
     | --- | --- | --- | --- | --- |
-    | micro | 4 | 128 | 4 | 0.551 |
-    | tiny | 4 | 256 | 8 | 0.558 #rel-improve(0.558, 0.551)|
-    | small | 4 | 512 | 16 | 0.567 #rel-improve(0.567, 0.551) |
-    | medium | 8 | 512 | 16 | 0.567 #rel-improve(0.567, 0.551) |
+    | nano | 4 | 64 | 2 | 0.544 #rel-degrade(0.544, 0.558)|
+    | micro | 4 | 128 | 4 | 0.558 |
+    | tiny | 4 | 256 | 8 | 0.560 #rel-improve(0.560, 0.558)|
+    | small | 4 | 512 | 16 | 0.567 #rel-improve(0.567, 0.558) |
+    | medium | 8 | 512 | 16 | 0.567 #rel-improve(0.567, 0.558) |
     | large | 12 | 768 | 16 | N/A |
     | x-large | 16 | 1024 | 16 | N/A |
   ]
@@ -54,27 +57,29 @@ LSTMClassifier(
   #image("assets/exp/size/size.png")
 ]
 
-实验结果：tiny效果较差，small与medium接近。medium已经开始过拟合了，其余的没有测试
+实验结果：随着模型大小提升，准确率稳定提升，但除nano外其他模型均会过拟合
 
 ---
 
-#grid(columns: (1.8fr, 1fr))[
-
+#grid(columns: (1.5fr, 1fr), gutter: 1em)[
+  
   2. 规约方法方法实验：
-
+  
   - last: 选择最后一个token的特征接到分类头
   - mean: 选择所有token的特征的平均值接到分类头
-
+  
   #three-line-table[
-    | 模型大小 | reduction: last | reduction: mean |
+    | 模型大小 | baseline(last) | mean |
     | --- | --- | --- |
-    | tiny | 0.558 | 0.571 #rel-improve(0.571, 0.558) |
+    | nano | 0.544 | 0.558 #rel-improve(0.558, 0.544) |
+    | micro | 0.558 | 0.573 #rel-improve(0.573, 0.558) |
+    | tiny | 0.560 | 0.571 #rel-improve(0.571, 0.560) |
     | small | 0.567 | 0.580 #rel-improve(0.580, 0.567) |
-    | medium | 0.567 | 0.570 #rel-improve(0.570, 0.567) |
+    | medium | 0.567 | 0.573 #rel-improve(0.573, 0.567) |
   ]
-
-  可以看到，mean 方法明显比 last方法好，但模型越大，规约方法的影响越小
-
+  
+  可以看到，mean 方法明显比 last方法好，但模型变大之后，规约方法的影响减小
+  
   可能是因为在模型层数以及参数量不够大的情况下，单独的一个token无法很好地融合整个句子的信息
 
 ][
@@ -82,7 +87,11 @@ LSTMClassifier(
     grid(columns: 2, align: horizon)[
       #image("assets/exp/reduction/" + spec + ".png", width: 13em)
     ][
-      (#spec)
+      #if spec == "tiny" {
+        [(tiny及以下)]
+      } else {
+        [(#spec)]
+      }
     ]
   }
 ]
@@ -104,10 +113,10 @@ LSTMClassifier(
 )[
   
   #three-line-table[
-    | 模型大小 | baseline | +mean reduce | +pretrain |
+    | 模型大小 | baseline | +mean | +pretrain |
     | --- | --- | --- | --- |
-    | tiny | 0.558 | 0.571 #rel-improve(0.571, 0.558) | 0.588 #rel-improve(0.588, 0.558) |
-    | medium | 0.567 | 0.570 #rel-improve(0.570, 0.567) | 0.597 #rel-improve(0.597, 0.567) |
+    | tiny | 0.560 | 0.571 #rel-improve(0.571, 0.560) | 0.588 #rel-improve(0.588, 0.560) |
+    | medium | 0.567 | 0.573 #rel-improve(0.573, 0.567) | 0.597 #rel-improve(0.597, 0.567) |
   ]
 
 ][
@@ -127,9 +136,9 @@ LSTMClassifier(
 使用更大的模型，更久的预训练：
 
 #grid(columns: (1fr, 1fr))[
-#figure(image("assets/exp/pretrain-loss.png", width: 90%), caption: "预训练 Loss 曲线")
+#figure(image("assets/exp/pretrain-loss.png", width: 90%), caption: "x-large 预训练 Loss 曲线")
 ][
-#figure(image("assets/exp/x-large.png", width: 90%), caption: "微调")
+#figure(image("assets/exp/x-large.png", width: 90%), caption: "微调，红线：x-large，蓝线：medium")
 ]
 
 ---
