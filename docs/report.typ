@@ -75,6 +75,7 @@
 
   align(center, text(1.7em)[*#title —— #subtitle*])
   align(right, emph(author))
+  meta.badge
   doc
 }
 

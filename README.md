@@ -1,4 +1,4 @@
-# ML Course (2025) Project: Analysis of Movie Santiments
+# ML Course (2025) Project: Analysis of Movie Sentiments
 
 ## 环境设置
 
@@ -101,3 +101,11 @@ uv run python -m app.webui.app \
     transformers \
     --some_train_args # e.g. --hf_model distilbert
 ```
+
+![demo](docs/src/assets/webui/demo.gif)
+
+## 报告
+
+[Slide](docs/slide.pdf)
+
+[Report](docs/report.pdf)

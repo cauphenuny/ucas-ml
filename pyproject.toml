@@ -6,12 +6,15 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "argparse>=1.4.0",
+    "gradio>=6.2.0",
     "hf-xet>=1.2.0",
+    "httpx[socks]>=0.28.1",
     "ipykernel>=7.1.0",
     "joblib>=1.5.3",
     "loguru>=0.7.3",
     "modelscope>=1.33.0",
     "pandas>=2.3.3",
+    "plotly>=6.5.0",
     "scikit-learn==1.7.2",
     "tinyllm",
     "torch>=2.2.2",

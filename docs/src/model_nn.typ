@@ -42,13 +42,17 @@ Multilayer LSTM:
   #v(0.5em)
   ==== Transformer Block
   
-  采用与当前主流LLM相同的结构
-  
-  - Decoder Only, 只有自注意力层
-  - Pre-Norm，增强训练稳定性
+  与原始的 Transformer 相比，我们实现的 transformer block 有以下改动：
+
+  - Decoder Only，而不是transformer提出时的 Encoder - Decoder 结构
+  - Pre-Norm，将norm从add之后提到attn/ffn之前
   - RoPE 位置编码
   - Normalization: RMSNorm
   - Activation: SwiGLU
+
+  #theorion.note-box(title: "为什么用这些设置?")[
+    经过调研，这些是当前主流LLM都在使用的结构
+  ]
 
 ][
   #figure(image("assets/transformer_block.png", width: 13em), caption: "Decode Transformer Block")
