@@ -1,8 +1,20 @@
 # ML Course (2025) Project: Analysis of Movie Sentiments
 
+![badge](docs/src/assets/badge.svg)
+
+<https://www.kaggle.com/competitions/sentiment-analysis-on-movie-reviews>
+
+![tinyllm-result](docs/src/assets/kaggle/tinyllm.png)
+
+Other results (roberta, lstm, logistic-regression): [docs/src/assets/kaggle](docs/src/assets/kaggle)
+
+## Demo (WebUI)
+
+![demo](docs/src/assets/webui/demo.gif)
+
 ## 环境设置
 
-```shell 
+```shell
 # install uv:
 # curl -LsSf https://astral.sh/uv/install.sh | sh
 uv sync
@@ -17,6 +29,7 @@ uv run pytest
 ## 训练模型 (Classifier)
 
 ### usage
+
 ```shell
 uv run scripts/train.py --help
 ```
@@ -43,10 +56,10 @@ uv run scripts/train.py \
     --reduction $reduction \
     --vocab_size 10000 \
     --model_size $size \
-    --dropout $drop \
 ```
 
 Fine-Tune checkpoints from `transformers`:
+
 ```shell
 uv run scripts/train.py \
     --epoch 2 \
@@ -89,7 +102,7 @@ uv run scripts/train.py \
     --tokenizer tiny-stories \
     --vocab_size 10000 \
     --model_size size_of_checkpoint \
-    --base_model path/to/checkpoint.pt
+    --base_model name_of_checkpoint.pt
 ```
 
 ## WebUI
@@ -97,12 +110,10 @@ uv run scripts/train.py \
 ```shell
 # example uses transformers, can be changed to tinyllm/lstm
 uv run python -m app.webui.app \
-    --load_ckpt path/to/checkpoint.pt \
+    --load_ckpt name_of_checkpoint.pt \
     transformers \
-    --some_train_args # e.g. --hf_model distilbert
+    --some_train_args # e.g. --hf_model distilbert-base-uncased
 ```
-
-![demo](docs/src/assets/webui/demo.gif)
 
 ## 报告
 
